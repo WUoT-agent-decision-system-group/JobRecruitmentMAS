@@ -1,1 +1,1 @@
-init
+run docker-compose up --build
