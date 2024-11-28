@@ -1,9 +1,9 @@
-FROM python:3.10
-
+FROM python:3.10 AS spade
 WORKDIR /app
-COPY . /app
-
 RUN pip install spade
 
-RUN chmod +x main.py
-CMD python -u main.py
+FROM spade
+WORKDIR /app
+COPY . /app
+RUN chmod +x app/main.py
+CMD python -u app/main.py
