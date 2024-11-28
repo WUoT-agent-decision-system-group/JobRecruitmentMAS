@@ -1,0 +1,15 @@
+{
+  "server": {
+    "name": "server_hello"
+  },
+  "agents": {
+    "ReceiverAgent": {
+      "jid": "receiver",
+      "password": "receiver_password"
+    },
+    "SenderAgent": {
+      "jid": "sender",
+      "password": "sender_password"
+    }
+  }
+}
