@@ -2,11 +2,10 @@ from agents import ReceiverAgent, SenderAgent
 
 
 async def main():
-    receiver = ReceiverAgent.ReceiverAgent(
-        "receiver@server_hello", "receiver_password")
+    receiver = ReceiverAgent.ReceiverAgent()
     await receiver.start()
 
-    sender = SenderAgent.SenderAgent("sender@server_hello", "sender_password")
+    sender = SenderAgent.SenderAgent()
     await sender.start()
 
     # Wait for SenderAgent to complete sending the message
