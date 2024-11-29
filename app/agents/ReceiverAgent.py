@@ -11,13 +11,11 @@ class ReceiverAgent(BaseAgent):
             # Wait for a message for up to 10 seconds
             msg = await self.receive(timeout=10)
             if msg:
-                print(f"[receiver] Received message: {msg.body}")
+                self.agent.logger.info("Received message: %s", msg.body)
             else:
-                print("[receiver] No message received within the timeout.")
+                self.agent.logger.info(
+                    "No message received within the timeout.")
 
     async def setup(self):
-        print(f"ReceiverAgent {self.jid} started")
+        await super().setup()
         self.add_behaviour(self.ReceiveMessageBehaviour())
-
-    def tolog(self):
-        pass
