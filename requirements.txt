@@ -23,6 +23,7 @@ propcache==0.2.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.22
+pymongo==4.10.1
 pyOpenSSL==24.3.0
 python-dateutil==2.9.0.post0
 pytz==2022.1

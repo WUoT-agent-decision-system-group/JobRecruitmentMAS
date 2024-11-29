@@ -1,7 +1,7 @@
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 
-from .BaseAgent import BaseAgent
+from .base.BaseAgent import BaseAgent
 
 
 class SenderAgent(BaseAgent):

@@ -16,3 +16,9 @@
    - logi są zapisywane w folderze `logs` na głównym poziomie repo
    - wypisywane też w konsoli.
    - nigdy nie używać `print` w agentach, tylko `self.logger`
+
+### Baza danych - MongoDB
+
+1. Polecam pobrać sobie MongoDB Compass (gui do bazy danych).
+2. Adres bazy to `mongodb://localhost:27017` - port wystawiony z kontenera (taki uri wpisać w New Connection w Compass)
+3. Tam są funkcjonalności eksportu i importu kolekcji (odpowiednik tabel w sql), więc będziemy mogli się wymieniać danymi za pomocą csv
