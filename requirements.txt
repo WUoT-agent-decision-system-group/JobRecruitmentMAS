@@ -11,6 +11,7 @@ attrs==24.2.0
 babel==2.16.0
 cffi==1.17.1
 cryptography==44.0.0
+dependency-injector==4.43.0
 dnspython==2.7.0
 frozenlist==1.5.0
 idna==3.10

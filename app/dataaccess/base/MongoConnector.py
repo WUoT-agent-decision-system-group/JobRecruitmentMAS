@@ -1,29 +1,40 @@
-from logging import Logger
+import logging
 
+from dependency_injector import containers, providers
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
 from app.utils.configuration import MASConfiguration
+from app.utils.log_config import LogConfig
 
 
 class MongoConnector:
-    def __init__(self, db_name: str, logger: Logger):
-        self.logger = logger
-        self.db_name = db_name
+    def __init__(self):
         self._client = None
-        self.db = None
         self._connect()
+        self.logger = None
 
     def _connect(self):
-        self.logger.info("Connecting to db: %s.", self.db_name)
+        LogConfig.load_config(self.__class__.__name__)
+        self.logger = logging.getLogger(self.__class__.__name__)
         config = MASConfiguration.load()
         dbhost = config.db.host
         try:
+            self.logger.info("Connecting to mongo: %s.", dbhost)
             self._client = MongoClient(dbhost)
-            self.db = self._client[self.db_name]
             self._client.admin.command('ping')
-            self.logger.info("Connected to db: %s.", self.db_name)
+            self.logger.info("Connected successfully.")
 
         except ConnectionFailure:
-            self.logger.error("Cannot connect to db %s in %s.",
-                              self.db_name, dbhost)
+            self.logger.error("Cannot connect to %s.", dbhost)
+
+    @property
+    def client(self):
+        return self._client
+
+
+class MongoContainer(containers.DeclarativeContainer):
+    mongo_connector = providers.Singleton(MongoConnector)
+
+
+mongo_container = MongoContainer()

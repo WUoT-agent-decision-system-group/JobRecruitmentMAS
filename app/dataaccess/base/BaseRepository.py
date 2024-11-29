@@ -5,16 +5,17 @@ from typing import Generic, List, Type, TypeVar
 from pymongo.collection import Collection
 
 from .helpers import map_id, map_ids
-from .MongoConnector import MongoConnector
+from .MongoConnector import mongo_container
 
 T = TypeVar('T')
 
 
 class BaseRepository(ABC, Generic[T]):
     def __init__(self, obj_class: Type[T], db_name: str, collection_name: str, logger: Logger):
-        self.connection = MongoConnector(db_name, logger)
+        self.db_name = db_name
+        client = mongo_container.mongo_connector().client
         self.collection_name = collection_name
-        self.collection: Collection = self.connection.db[collection_name]
+        self.collection: Collection = client[self.db_name].db[collection_name]
         self.logger = logger
         self.obj_class = obj_class
 

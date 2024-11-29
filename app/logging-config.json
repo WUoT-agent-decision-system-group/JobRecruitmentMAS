@@ -29,6 +29,11 @@
       "level": "DEBUG",
       "handlers": ["file", "console"],
       "propagate": false
+    },
+    "MongoConnector": {
+      "level": "DEBUG",
+      "handlers": ["file", "console"],
+      "propagate": false
     }
   }
 }
