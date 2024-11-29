@@ -1,5 +1,6 @@
-from modules.TestModule import TestModule
 from spade.behaviour import CyclicBehaviour
+
+from app.modules.TestModule import TestModule
 
 from .base.BaseAgent import BaseAgent
 
@@ -7,7 +8,6 @@ from .base.BaseAgent import BaseAgent
 class ReceiverAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.test_repository = None
         self.test_module = TestModule(self.agent_config.dbname, self.logger)
 
     class ReceiveMessageBehaviour(CyclicBehaviour):
