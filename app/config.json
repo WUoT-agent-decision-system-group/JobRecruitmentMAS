@@ -5,11 +5,16 @@
   "agents": {
     "ReceiverAgent": {
       "jid": "receiver",
-      "password": "receiver_password"
+      "password": "receiver_password",
+      "dbname": "aasd"
     },
     "SenderAgent": {
       "jid": "sender",
-      "password": "sender_password"
+      "password": "sender_password",
+      "dbname": "aasd"
     }
+  },
+  "db": {
+    "host": "mongodb://aasd_mongodb:27017/"
   }
 }

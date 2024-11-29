@@ -14,12 +14,19 @@ class ServerConfig:
 class AgentConfig:
     jid: str
     password: str
+    dbname: str
+
+
+@dataclass
+class DBConfig:
+    host: str
 
 
 @dataclass
 class MASConfiguration:
     server: ServerConfig
     agents: Dict[str, AgentConfig]
+    db: DBConfig
 
     @staticmethod
     def load():
@@ -29,5 +36,6 @@ class MASConfiguration:
         server = ServerConfig(**config["server"])
         agents = {name: AgentConfig(**agent)
                   for name, agent in config["agents"].items()}
+        db = DBConfig(**config["db"])
 
-        return MASConfiguration(server=server, agents=agents)
+        return MASConfiguration(server=server, agents=agents, db=db)

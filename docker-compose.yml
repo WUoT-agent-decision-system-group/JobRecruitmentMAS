@@ -13,6 +13,8 @@ services:
     volumes:
       - ./tigase/config/tigase.conf:/home/tigase/tigase-server/etc/tigase.conf
       - ./tigase/config/config.tdsl:/home/tigase/tigase-server/etc/config.tdsl
+    networks:
+      - aasd_network
 
   aasd_system:
     build:
@@ -30,3 +32,18 @@ services:
       - SPADE_AGENT_PASSWORD=admin
     volumes:
       - ./logs:/app/logs:rw
+    networks:
+      - aasd_network
+
+  aasd_mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ~/aasd_mongo:/data/db
+    networks:
+      - aasd_network
+
+networks:
+  aasd_network:

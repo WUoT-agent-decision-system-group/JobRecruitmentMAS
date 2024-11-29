@@ -3,23 +3,23 @@ from abc import ABC
 from time import sleep
 
 from spade.agent import Agent
-from utils import configuration as cfg
-from utils import log_config as logcfg
+from utils.configuration import MASConfiguration
+from utils.log_config import LogConfig
 
 
 class BaseAgent(ABC, Agent):
     def __init__(self):
 
         # tigase config
-        config = cfg.MASConfiguration.load()
-        agent_config = config.agents[self.__class__.__name__]
-        jid = agent_config.jid + "@" + config.server.name
-        super().__init__(jid, agent_config.password)
+        config = MASConfiguration.load()
+        self.agent_config = config.agents[self.__class__.__name__]
+        jid = self.agent_config.jid + "@" + config.server.name
+        super().__init__(jid, self.agent_config.password)
 
-        self.id = agent_config.jid
+        self.id = self.agent_config.jid
 
         # logger config
-        logcfg.LogConfig.load_config(self.id)
+        LogConfig.load_config(self.id)
         self.logger = logging.getLogger(f"Agent.{self.id}")
         self.logger.info("Logger initialized for %s", self.id)
 
