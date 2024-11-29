@@ -5,7 +5,9 @@ async def main():
     receiver = ReceiverAgent.ReceiverAgent()
     await receiver.start()
 
-    sender = SenderAgent.SenderAgent()
+    sender = SenderAgent.SenderAgent("abc")
+    await sender.start()
+    sender = SenderAgent.SenderAgent("xyz")
     await sender.start()
 
     # Wait for SenderAgent to complete sending the message

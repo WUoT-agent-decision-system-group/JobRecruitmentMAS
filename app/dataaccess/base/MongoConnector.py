@@ -15,7 +15,7 @@ class MongoConnector:
         self.logger = None
 
     def _connect(self):
-        LogConfig.load_config(self.__class__.__name__)
+        LogConfig.get_logger(self.__class__.__name__)
         self.logger = logging.getLogger(self.__class__.__name__)
         config = MASConfiguration.load()
         dbhost = config.db.host

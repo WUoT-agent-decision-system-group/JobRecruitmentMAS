@@ -10,7 +10,7 @@
 
 1. Czeka na inicjalizacje serwera - problem z zajęć rozwiązany. Nadpisuje bazową metodę ze spade, więc użycie agentów się nie zmienia.
 2. Wczytuje z pliku `app/config.json` login i hasło do serwera, w przyszłości też pewnie konfig bazy
-3. Wczytuje z pliku `app/log-config.json` konfiguracje loggera
+3. Tworzy loggera per instancja klasy agenta
 
    - każda instancja agenta ma swój oddzielny plik dla lepszej czytelności, pewnie kiedyś nam się przyda w szukaniu błędów
    - logi są zapisywane w folderze `logs` na głównym poziomie repo

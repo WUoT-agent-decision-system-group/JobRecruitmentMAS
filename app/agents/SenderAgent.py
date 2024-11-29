@@ -11,7 +11,7 @@ class SenderAgent(BaseAgent):
                 "Sending message: Hello from SenderAgent!")
             msg = Message(to="receiver@aasd_server")  # Receiver's JID
             msg.set_metadata("performative", "inform")
-            msg.body = "Hello from SenderAgent!"
+            msg.body = f"Hello from SenderAgent ({self.agent.id})!"
             await self.send(msg)
             self.agent.logger.info("Message sent, stopping agent.")
             await self.agent.stop()

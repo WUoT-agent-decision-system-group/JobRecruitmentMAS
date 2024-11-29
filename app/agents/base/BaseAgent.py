@@ -1,4 +1,3 @@
-import logging
 from abc import ABC
 from time import sleep
 
@@ -9,7 +8,7 @@ from app.utils.log_config import LogConfig
 
 
 class BaseAgent(ABC, Agent):
-    def __init__(self):
+    def __init__(self, custom_id: str = ""):
 
         # tigase config
         config = MASConfiguration.load()
@@ -18,10 +17,12 @@ class BaseAgent(ABC, Agent):
         super().__init__(jid, self.agent_config.password)
 
         self.id = self.agent_config.jid
+        self.cid = custom_id
+        if custom_id != "":
+            self.id += f"_{custom_id}"
 
         # logger config
-        LogConfig.load_config(self.id)
-        self.logger = logging.getLogger(f"Agent.{self.id}")
+        self.logger = LogConfig.get_logger(f"Agent.{self.id}")
         self.logger.info("Logger initialized for %s", self.id)
 
     async def start(self, auto_register: bool = True) -> None:
