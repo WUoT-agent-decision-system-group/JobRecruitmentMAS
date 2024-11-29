@@ -6,5 +6,6 @@ RUN pip install pymongo
 FROM spade
 WORKDIR /app
 COPY . /app
+ENV PYTHONPATH="/app/"
 RUN chmod +x app/main.py
 CMD python -u app/main.py

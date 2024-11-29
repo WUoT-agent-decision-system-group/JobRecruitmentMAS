@@ -3,8 +3,9 @@ from abc import ABC
 from time import sleep
 
 from spade.agent import Agent
-from utils.configuration import MASConfiguration
-from utils.log_config import LogConfig
+
+from app.utils.configuration import MASConfiguration
+from app.utils.log_config import LogConfig
 
 
 class BaseAgent(ABC, Agent):

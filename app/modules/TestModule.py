@@ -1,6 +1,6 @@
 from logging import Logger
 
-from dataaccess.TestRepository import TestRepository
+from app.dataaccess.TestRepository import TestRepository
 
 
 class TestModule():

@@ -2,7 +2,8 @@ from logging import Logger
 
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from utils.configuration import MASConfiguration
+
+from app.utils.configuration import MASConfiguration
 
 
 class MongoConnector:
