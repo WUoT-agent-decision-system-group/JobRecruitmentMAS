@@ -1,9 +1,11 @@
+from deprecated import deprecated
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 
 from .base.BaseAgent import BaseAgent
 
 
+@deprecated("Obsolete")
 class SenderAgent(BaseAgent):
     class SendMessageBehaviour(CyclicBehaviour):
         async def run(self):

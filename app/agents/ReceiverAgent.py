@@ -1,3 +1,4 @@
+from deprecated import deprecated
 from spade.behaviour import CyclicBehaviour
 
 from app.modules.TestModule import TestModule
@@ -5,6 +6,7 @@ from app.modules.TestModule import TestModule
 from .base.BaseAgent import BaseAgent
 
 
+@deprecated("Obsolete")
 class ReceiverAgent(BaseAgent):
     def __init__(self):
         super().__init__()

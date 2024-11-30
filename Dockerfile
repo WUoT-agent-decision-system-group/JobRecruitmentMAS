@@ -1,8 +1,7 @@
 FROM python:3.10 AS spade
 WORKDIR /app
-RUN pip install spade
-RUN pip install pymongo
-RUN pip install dependency_injector
+COPY requirements.txt /app
+RUN pip install -r ./requirements.txt
 
 FROM spade
 WORKDIR /app
