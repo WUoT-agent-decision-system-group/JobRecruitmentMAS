@@ -10,9 +10,7 @@ from app.utils.log_config import LogConfig
 
 class MongoConnector:
     def __init__(self):
-        self._client = None
         self._connect()
-        self.logger = None
 
     def _connect(self):
         LogConfig.get_logger(self.__class__.__name__)
