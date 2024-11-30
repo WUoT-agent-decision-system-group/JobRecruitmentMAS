@@ -1,5 +1,3 @@
-from typing import List
-
 import spade
 from agents.JobOfferManagerAgent import JobOfferManagerAgent
 from dataaccess.model.JobOffer import JobOffer
@@ -16,7 +14,7 @@ def get_module() -> JobOfferModule:
     return JobOfferModule(dbname, logger)
 
 
-async def create_agents(jobOffers: List[JobOffer]) -> List[spade.agent.Agent]:
+async def create_agents(jobOffers: list[JobOffer]) -> list[spade.agent.Agent]:
     agents = [JobOfferManagerAgent(x.id) for x in jobOffers]
 
     for a in agents:

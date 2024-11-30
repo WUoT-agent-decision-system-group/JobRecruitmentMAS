@@ -1,5 +1,4 @@
 from logging import Logger
-from typing import List
 
 from app.dataaccess.JobOfferRepository import JobOfferRepository
 from app.dataaccess.model.JobOffer import JobOffer, JobOfferStatus
@@ -13,7 +12,7 @@ class JobOfferModule():
     def __load_repositories(self, dbname: str):
         self.__job_offers_repository = JobOfferRepository(dbname, self.logger)
 
-    def get_open_job_offers(self) -> List[JobOffer]:
+    def get_open_job_offers(self) -> list[JobOffer]:
         query = {"status": {"$ne": JobOfferStatus.CLOSED.value}}
         return self.__job_offers_repository.get_many_by_filter(query)
 

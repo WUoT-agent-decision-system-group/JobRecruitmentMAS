@@ -1,6 +1,6 @@
 from abc import ABC
 from logging import Logger
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, Type, TypeVar
 
 from pymongo.collection import Collection
 
@@ -25,7 +25,7 @@ class BaseRepository(ABC, Generic[T]):
     def _doc_to_obj(self, document) -> T:
         return self.obj_class(**document)
 
-    def _docs_to_obj(self, documents: List) -> T:
+    def _docs_to_obj(self, documents: list) -> T:
         return [self._doc_to_obj(doc) for doc in documents]
 
     def _log_info(self, info: str):
@@ -115,7 +115,7 @@ class BaseRepository(ABC, Generic[T]):
         except Exception as e:
             self._log_error(e)
 
-    def find_all(self) -> List[T]:
+    def find_all(self) -> list[T]:
         try:
             self._log_info("Find all called.")
             results = list(self.collection.find({}))
@@ -124,7 +124,7 @@ class BaseRepository(ABC, Generic[T]):
         except Exception as e:
             self._log_error(e)
 
-    def get_many_by_ids(self, ids: List[str]) -> List[T]:
+    def get_many_by_ids(self, ids: list[str]) -> list[T]:
         try:
             self._log_info(f"Get objects by ids: {ids} called.")
             object_ids = map_ids(ids)
@@ -134,7 +134,7 @@ class BaseRepository(ABC, Generic[T]):
         except Exception as e:
             self._log_error(e)
 
-    def get_many_by_filter(self, query: dict) -> List[T]:
+    def get_many_by_filter(self, query: dict) -> list[T]:
         """Example: get_many_by_filter({"name": "qwerty", "email": "123@321.com"})"""
 
         try:
