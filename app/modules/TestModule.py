@@ -1,8 +1,11 @@
 from logging import Logger
 
+from deprecated import deprecated
+
 from app.dataaccess.TestRepository import TestRepository
 
 
+@deprecated("Obsolete")
 class TestModule():
     def __init__(self, dbname: str, logger: Logger):
         self.logger = logger
