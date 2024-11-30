@@ -1,3 +1,4 @@
+import spade
 from agents import ReceiverAgent, SenderAgent
 
 
@@ -10,12 +11,7 @@ async def main():
     sender = SenderAgent.SenderAgent("xyz")
     await sender.start()
 
-    # Wait for SenderAgent to complete sending the message
-    # await sender.()
-
-    # Stop the receiver after processing messages
-    await receiver.stop()
+    await spade.wait_until_finished(receiver)
 
 if __name__ == "__main__":
-    import spade
     spade.run(main())
