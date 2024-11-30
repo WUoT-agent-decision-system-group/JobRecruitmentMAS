@@ -22,3 +22,12 @@
 1. Polecam pobrać sobie MongoDB Compass (gui do bazy danych).
 2. Adres bazy to `mongodb://localhost:27017` - port wystawiony z kontenera (taki uri wpisać w New Connection w Compass)
 3. Tam są funkcjonalności eksportu i importu kolekcji (odpowiednik tabel w sql), więc będziemy mogli się wymieniać danymi za pomocą csv
+
+### UWAGA
+
+1. Żeby mongo sie nie popłakało na widok enuma, operujmy zawsze na `.value` w enumach (w bazie będą zapisane inty), np.:
+
+```
+jobOffer1.status = JobOfferStatus.CLOSED.value
+repository.update(jobOffer1.id, jobOffer1)
+```

@@ -23,7 +23,6 @@ class BaseAgent(ABC, Agent):
 
         # logger config
         self.logger = LogConfig.get_logger(f"Agent.{self.id}")
-        self.logger.info("Logger initialized for %s", self.id)
 
     async def start(self, auto_register: bool = True) -> None:
         """Waits for server to initialize"""
@@ -39,6 +38,11 @@ class BaseAgent(ABC, Agent):
                 self.logger.error('Server not found, trying again...')
                 sleep(3)
                 repeat = True
+
+    async def stop(self):
+        if not self.is_alive():
+            self.logger.info("STOP\n")
+        return await super().stop()
 
     async def setup(self):
         self.logger.info("setup - started")

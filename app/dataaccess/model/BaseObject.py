@@ -10,3 +10,9 @@ class BaseObject(ABC):
     @property
     def id(self):
         return self._id
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return str(self)
