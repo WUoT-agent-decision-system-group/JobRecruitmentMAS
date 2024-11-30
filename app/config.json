@@ -17,6 +17,11 @@
       "jid": "jom",
       "password": "jom_password",
       "dbname": "aasd"
+    },
+    "RecruitmentManagerAgent": {
+      "jid": "rment",
+      "password": "rment_password",
+      "dbname": "aasd"
     }
   },
   "db": {

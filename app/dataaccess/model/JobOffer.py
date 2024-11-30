@@ -1,9 +1,8 @@
 from enum import Enum
-from typing import List
 
 from bson import ObjectId
 
-from .BaseObject import BaseObject
+from .BaseObject import BaseObject, PrintableObject
 
 
 class ApplicationStatus(Enum):
@@ -13,11 +12,10 @@ class ApplicationStatus(Enum):
     ANALYZED = 3
 
 
-class ApplicationDetails(BaseObject):
-    def __init__(self, _id, candidate_id: str, status: ApplicationStatus):
-        super().__init__(_id)
+class ApplicationDetails(PrintableObject):
+    def __init__(self, candidate_id: str, status: int | ApplicationStatus):
         self.candidate_id = candidate_id
-        self.status = status
+        self.status = ApplicationStatus(status)
 
 
 class JobOfferStatus(Enum):
@@ -35,10 +33,10 @@ class JobOffer(BaseObject):
         name: str,
         description: str,
         status: JobOfferStatus,
-        applications: List[ApplicationDetails]
+        applications: dict
     ):
         super().__init__(_id)
         self.name = name
         self.description = description
-        self.status = status
-        self.applications = applications
+        self.status = JobOfferStatus(status)
+        self.applications = [ApplicationDetails(**appl) for appl in applications]
