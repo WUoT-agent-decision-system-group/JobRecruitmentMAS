@@ -1,5 +1,3 @@
-import logging
-
 from dependency_injector import containers, providers
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
@@ -13,8 +11,7 @@ class MongoConnector:
         self._connect()
 
     def _connect(self):
-        LogConfig.get_logger(self.__class__.__name__)
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = LogConfig.get_logger(self.__class__.__name__)
         config = MASConfiguration.load()
         dbhost = config.db.host
         try:
