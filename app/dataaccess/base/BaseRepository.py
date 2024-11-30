@@ -18,7 +18,7 @@ class BaseRepository(ABC, Generic[T]):
         self.collection_name = collection_name
 
         client = mongo_container.mongo_connector().client
-        self.collection: Collection = client[self.db_name].db[collection_name]
+        self.collection: Collection = client[self.db_name].get_collection(collection_name)
         self.logger.info("Connected with collection %s in db %s",
                          self.collection_name, self.db_name)
 
@@ -118,8 +118,8 @@ class BaseRepository(ABC, Generic[T]):
     def find_all(self) -> List[T]:
         try:
             self._log_info("Find all called.")
-            results = self.collection.find({})
-            self._log_info(f"Find all returned {len(list(results))} objects.")
+            results = list(self.collection.find({}))
+            self._log_info(f"Find all returned {len(results)} objects.")
             return self._docs_to_obj(results)
         except Exception as e:
             self._log_error(e)
@@ -128,8 +128,8 @@ class BaseRepository(ABC, Generic[T]):
         try:
             self._log_info(f"Get objects by ids: {ids} called.")
             object_ids = map_ids(ids)
-            documents = self.collection.find({"_id": {"$in": object_ids}})
-            self._log_info(f"Get objects by ids returned {len(list(documents))}.")
+            documents = list(self.collection.find({"_id": {"$in": object_ids}}))
+            self._log_info(f"Get objects by ids returned {len(documents)}.")
             return self._docs_to_obj(documents)
         except Exception as e:
             self._log_error(e)
@@ -139,8 +139,8 @@ class BaseRepository(ABC, Generic[T]):
 
         try:
             self._log_info(f"Get by filter {query} called.")
-            documents = self.collection.find(query)
-            self._log_info(f"Get by filter {query} returned {len(list(documents))} objects.")
+            documents = list(self.collection.find(query))
+            self._log_info(f"Get by filter {query} returned {len(documents)} objects.")
             return self._docs_to_obj(documents)
         except Exception as e:
             self._log_error(e)
