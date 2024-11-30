@@ -18,3 +18,7 @@ class JobOfferModule():
 
     def get(self, _id: str) -> JobOffer:
         return self.__job_offers_repository.get(_id)
+
+    def change_application_status(self, job_offer_id: str, candidate_id: str, status: JobOfferStatus):
+        # self.__job_offers_repository.update()
+        pass  # TODO

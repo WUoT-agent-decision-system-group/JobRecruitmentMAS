@@ -13,13 +13,13 @@ class BaseAgent(ABC, Agent):
         # tigase config
         config = MASConfiguration.load()
         self.agent_config = config.agents[self.__class__.__name__]
-        jid = self.agent_config.jid + "@" + config.server.name
-        super().__init__(jid, self.agent_config.password)
-
         self.id = self.agent_config.jid
         self.cid = custom_id
         if custom_id != "":
             self.id += f"_{custom_id}"
+
+        jid = self.id + "@" + config.server.name
+        super().__init__(jid, self.agent_config.password)
 
         # logger config
         self.logger = LogConfig.get_logger(f"Agent.{self.id}")
