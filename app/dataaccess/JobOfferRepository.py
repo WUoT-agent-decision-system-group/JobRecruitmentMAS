@@ -1,6 +1,7 @@
 from logging import Logger
 
 from .base.BaseRepository import BaseRepository
+from .base.helpers import map_ids
 from .model.JobOffer import JobOffer, JobOfferStatus
 
 COLLECTION_NAME = "jobOffers"
@@ -14,6 +15,6 @@ class JobOfferRepository(BaseRepository):
                                   status: JobOfferStatus) -> bool:
         return self.update(
             job_offer_id,
-            {"applications.$[elem].status": status.value},
-            [{"elem.candidate_id": {"$in": candidate_ids}}]
+            {"$set": {"applications.$[elem].status": status.value}},
+            [{"elem.candidateId": {"$in": map_ids(candidate_ids)}}]
         )

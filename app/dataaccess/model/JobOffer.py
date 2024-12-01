@@ -13,9 +13,21 @@ class ApplicationStatus(Enum):
 
 
 class ApplicationDetails(PrintableObject):
-    def __init__(self, candidate_id: str, status: int | ApplicationStatus):
-        self.candidate_id = candidate_id
+    def __init__(
+        self,
+        candidateId: str | ObjectId,
+        status: int | ApplicationStatus,
+        name: str,
+        surname: str,
+        email: str,
+        cv: str | ObjectId
+    ):
+        self.candidate_id = str(candidateId)
         self.status = ApplicationStatus(status)
+        self.name = name
+        self.surname = surname
+        self.email = email
+        self.cv = str(cv)
 
 
 class JobOfferStatus(Enum):

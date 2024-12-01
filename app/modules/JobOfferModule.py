@@ -25,7 +25,7 @@ class JobOfferModule():
         if len(candidate_ids) == 0:
             return True
 
-        self.logger.info("Changin status for applications from %s for %s. New status: %s",
+        self.logger.info("Changing status for applications from %s for %s. New status: %s",
                          candidate_ids, job_offer_id, status)
 
         result = self.__job_offers_repository.change_application_status(

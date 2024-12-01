@@ -2,7 +2,10 @@ from abc import ABC
 from logging import Logger
 from typing import Generic, Type, TypeVar
 
+from bson.objectid import ObjectId
 from pymongo.collection import Any, Collection, Mapping, Sequence
+
+from app.dataaccess.model.BaseObject import BaseObject
 
 from .helpers import map_id, map_ids
 from .MongoConnector import mongo_container
@@ -42,6 +45,8 @@ class BaseRepository(ABC, Generic[T]):
 
     def create(self, obj: T) -> str:
         try:
+            obj: BaseObject = obj
+            obj.to_db_format()
             obj_dict = obj.__dict__
             self._log_info(f"Creating object: {obj_dict}.")
             result = self.collection.insert_one(obj_dict)
@@ -58,7 +63,7 @@ class BaseRepository(ABC, Generic[T]):
             result = self.collection.find_one(map_id(obj_id))
 
             if result:
-                self._log_info(f"Get object by id returned {result}.")
+                self._log_info(f"Get object by id returned {str(result)[:20]}.")
                 return self._doc_to_obj(result)
 
             self._log_warning(f"Object {obj_id} not found.")
@@ -74,12 +79,11 @@ class BaseRepository(ABC, Generic[T]):
 
         Example: update('6749b2b613be3a8fd0943d71',{"name":"qwerty", "email":"123@321.com"})
         """
-
         try:
             self._log_info(f"Update object with id {obj_id} called, updates: {updates}.")
             result = self.collection.update_one(
                 map_id(obj_id),
-                {"$set": updates},
+                updates,
                 array_filters=array_filters
             )
 

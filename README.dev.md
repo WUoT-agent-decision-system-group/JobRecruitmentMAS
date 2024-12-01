@@ -32,6 +32,10 @@ jobOffer1.status = JobOfferStatus.CLOSED.value
 repository.update(jobOffer1.id, jobOffer1)
 ```
 
+2. Mongo ma swój format idków, w momencie gdy czytamy go z bazy to w konstruktorach wszystkie id zamieniamy na stringi. Natomiast gdy robimy jakiś create/update to powinniśmy zawsze konwertować string do ObjectId.
+   - w `BaseRepository` w `create` mamy to załatwione gdy przeciążymy metodę `to_db_format` w klasie modelowej.
+   - do operacji `update` po prostu trzeba dobrze tworzyć słowniki. Pomocne metody: `map_id` i `map_ids` w `helpers`.
+
 ### Dodawanie aplikacji do systemu (do bazy)
 
 1. W folderze `docs` umieścić plik CV w pdfie.

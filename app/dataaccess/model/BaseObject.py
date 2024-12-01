@@ -13,8 +13,11 @@ class PrintableObject(ABC):
 
 class BaseObject(PrintableObject):
     def __init__(self, _id: str | ObjectId):
-        self._id = str(_id)
+        self._id: str | ObjectId = str(_id)
 
     @property
     def id(self):
         return self._id
+
+    def to_db_format(self):
+        self._id = ObjectId(self._id)
