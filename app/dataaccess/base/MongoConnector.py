@@ -17,7 +17,7 @@ class MongoConnector:
         try:
             self.logger.info("Connecting to mongo: %s.", dbhost)
             self._client = MongoClient(dbhost)
-            self._client.admin.command('ping')
+            self._client.admin.command("ping")
             self.logger.info("Connected successfully.")
 
         except ConnectionFailure:

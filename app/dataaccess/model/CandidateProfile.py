@@ -10,7 +10,7 @@ class CandidateProfile(BaseObject):
         name: str,
         surname: str,
         email: str,
-        applied_jobs: list[str | ObjectId]
+        applied_jobs: list[str | ObjectId],
     ):
         super().__init__(_id)
         self.applied_jobs = [str(x) for x in applied_jobs]

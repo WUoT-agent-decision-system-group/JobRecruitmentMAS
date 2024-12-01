@@ -6,7 +6,7 @@ from app.dataaccess.TestRepository import TestRepository
 
 
 @deprecated("Obsolete")
-class TestModule():
+class TestModule:
     def __init__(self, dbname: str, logger: Logger):
         self.logger = logger
         self.load_repositories(dbname)

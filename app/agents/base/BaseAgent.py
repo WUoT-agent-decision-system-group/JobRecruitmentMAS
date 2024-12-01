@@ -35,7 +35,7 @@ class BaseAgent(ABC, Agent):
 
                 # pylint: disable=W0718
             except Exception:
-                self.logger.error('Server not found, trying again...')
+                self.logger.error("Server not found, trying again...")
                 sleep(3)
                 repeat = True
 

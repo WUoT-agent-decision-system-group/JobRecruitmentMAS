@@ -8,7 +8,7 @@ from app.utils.configuration import MASConfiguration
 
 
 def get_module() -> JobOfferModule:
-    logger = LogConfig.get_logger('init')
+    logger = LogConfig.get_logger("init")
     config = MASConfiguration.load()
     dbname = config.agents[JobOfferManagerAgent.__name__].dbname
     return JobOfferModule(dbname, logger)
@@ -29,6 +29,7 @@ async def main():
 
     agents = await create_agents(jobOffers)
     await spade.wait_until_finished(agents)
+
 
 if __name__ == "__main__":
     spade.run(main())

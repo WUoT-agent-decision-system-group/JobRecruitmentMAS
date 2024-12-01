@@ -39,4 +39,5 @@ class LogConfig:
     @staticmethod
     def __get_formatter() -> logging.Formatter:
         return logging.Formatter(
-            "%(asctime)s.%(msecs)03d [%(name)s] %(levelname)s: %(message)s")
+            "%(asctime)s.%(msecs)03d [%(name)s] %(levelname)s: %(message)s"
+        )

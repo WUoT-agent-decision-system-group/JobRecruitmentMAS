@@ -9,8 +9,7 @@ from .base.BaseAgent import BaseAgent
 class SenderAgent(BaseAgent):
     class SendMessageBehaviour(CyclicBehaviour):
         async def run(self):
-            self.agent.logger.info(
-                "Sending message: Hello from SenderAgent!")
+            self.agent.logger.info("Sending message: Hello from SenderAgent!")
             msg = Message(to="receiver@aasd_server")  # Receiver's JID
             msg.set_metadata("performative", "inform")
             msg.body = f"Hello from SenderAgent ({self.agent.id})!"

@@ -7,10 +7,12 @@ from .base.BaseAgent import BaseAgent
 
 class RecruitmentManagerAgent(BaseAgent):
     def __init__(self, job_offer_id: str, candidate_id: str):
-        super().__init__(str.join('_', [job_offer_id, candidate_id]))
+        super().__init__(str.join("_", [job_offer_id, candidate_id]))
         self.job_offer_id = job_offer_id
         self.candidate_id = candidate_id
-        self.recruitmentModule = RecruitmentModule(self.agent_config.dbname, self.logger)
+        self.recruitmentModule = RecruitmentModule(
+            self.agent_config.dbname, self.logger
+        )
         self.recruitment = None
 
         # TODO behaviours

@@ -20,7 +20,7 @@ class ApplicationDetails(PrintableObject):
         name: str,
         surname: str,
         email: str,
-        cv: str | ObjectId
+        cv: str | ObjectId,
     ):
         self.candidate_id = str(candidateId)
         self.status = ApplicationStatus(status)
@@ -45,7 +45,7 @@ class JobOffer(BaseObject):
         name: str,
         description: str,
         status: JobOfferStatus,
-        applications: dict
+        applications: dict,
     ):
         super().__init__(_id)
         self.name = name
