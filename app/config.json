@@ -12,6 +12,16 @@
       "jid": "sender",
       "password": "sender_password",
       "dbname": "aasd"
+    },
+    "JobOfferManagerAgent": {
+      "jid": "jom",
+      "password": "jom_password",
+      "dbname": "aasd"
+    },
+    "RecruitmentManagerAgent": {
+      "jid": "rment",
+      "password": "rment_password",
+      "dbname": "aasd"
     }
   },
   "db": {

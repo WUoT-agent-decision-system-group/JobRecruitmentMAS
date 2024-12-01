@@ -22,3 +22,26 @@
 1. Polecam pobrać sobie MongoDB Compass (gui do bazy danych).
 2. Adres bazy to `mongodb://localhost:27017` - port wystawiony z kontenera (taki uri wpisać w New Connection w Compass)
 3. Tam są funkcjonalności eksportu i importu kolekcji (odpowiednik tabel w sql), więc będziemy mogli się wymieniać danymi za pomocą csv
+
+### UWAGA
+
+1. Żeby mongo sie nie popłakało na widok enuma, operujmy zawsze na `.value` w enumach (w bazie będą zapisane inty), np.:
+
+```
+jobOffer1.status = JobOfferStatus.CLOSED.value
+repository.update(jobOffer1.id, jobOffer1)
+```
+
+2. Mongo ma swój format idków, w momencie gdy czytamy go z bazy to w konstruktorach wszystkie id zamieniamy na stringi. Natomiast gdy robimy jakiś create/update to powinniśmy zawsze konwertować string do ObjectId.
+   - w `BaseRepository` w `create` mamy to załatwione gdy przeciążymy metodę `to_db_format` w klasie modelowej.
+   - do operacji `update` po prostu trzeba dobrze tworzyć słowniki. Pomocne metody: `map_id` i `map_ids` w `helpers`.
+
+### Dodawanie aplikacji do systemu (do bazy)
+
+1. W folderze `docs` umieścić plik CV w pdfie.
+2. Przejść do folderu `scripts`
+3. Wywołać `./apply_for_job.sh <joboffer_id> <candidate_id> <candidate_name> <candidate_surname> <candidate_email> <cv_filename> <cv-object-id (w formacie mongo)>`.
+
+   Skrypt wstawi plik do bazy oraz doda aplikacje do stanowiska pracy. UWAGA: powinna być max 1 aplikacja danego kandydata na dane stanowisko, uwaga na candidate_id
+
+   Przykład: `./apply_for_job.sh 674aff48c8c935e125c43939 674aff48c8c935e125c43326 jan testowy jantestowy@gmail.com cv-template.pdf fffffffffffffffffffffff1`

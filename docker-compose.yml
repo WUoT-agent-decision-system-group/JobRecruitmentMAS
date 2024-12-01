@@ -23,6 +23,7 @@ services:
     container_name: spade_agent
     depends_on:
       - aasd_server
+      - aasd_mongodb
     deploy:
       resources:
         limits:
@@ -42,6 +43,8 @@ services:
       - "27017:27017"
     volumes:
       - ~/aasd_mongo:/data/db
+      - ./scripts/mongosh:/home/ubuntu/scripts/mongosh
+      - ./docs:/home/ubuntu/docs
     networks:
       - aasd_network
 

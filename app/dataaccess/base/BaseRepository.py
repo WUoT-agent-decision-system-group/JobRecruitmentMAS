@@ -1,8 +1,11 @@
 from abc import ABC
 from logging import Logger
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, Type, TypeVar
 
-from pymongo.collection import Collection
+from bson.objectid import ObjectId
+from pymongo.collection import Any, Collection, Mapping, Sequence
+
+from app.dataaccess.model.BaseObject import BaseObject
 
 from .helpers import map_id, map_ids
 from .MongoConnector import mongo_container
@@ -25,7 +28,7 @@ class BaseRepository(ABC, Generic[T]):
     def _doc_to_obj(self, document) -> T:
         return self.obj_class(**document)
 
-    def _docs_to_obj(self, documents: List) -> T:
+    def _docs_to_obj(self, documents: list) -> T:
         return [self._doc_to_obj(doc) for doc in documents]
 
     def _log_info(self, info: str):
@@ -42,6 +45,8 @@ class BaseRepository(ABC, Generic[T]):
 
     def create(self, obj: T) -> str:
         try:
+            obj: BaseObject = obj
+            obj.to_db_format()
             obj_dict = obj.__dict__
             self._log_info(f"Creating object: {obj_dict}.")
             result = self.collection.insert_one(obj_dict)
@@ -50,6 +55,7 @@ class BaseRepository(ABC, Generic[T]):
             return _id
         except Exception as e:
             self._log_error(e)
+            return None
 
     def get(self, obj_id: str) -> T:
         try:
@@ -57,24 +63,29 @@ class BaseRepository(ABC, Generic[T]):
             result = self.collection.find_one(map_id(obj_id))
 
             if result:
-                self._log_info(f"Get object by id returned {result}.")
+                self._log_info(f"Get object by id returned {str(result)[:20]}.")
                 return self._doc_to_obj(result)
 
             self._log_warning(f"Object {obj_id} not found.")
             return None
         except Exception as e:
             self._log_error(e)
+            return None
 
-    def update(self, obj_id: str, updates: dict) -> bool:
+    def update(self, obj_id: str, updates: dict,
+               array_filters: Sequence[Mapping[str, Any]] = None) -> bool:
         """
         Updates field in `updates` for `obj_id`.
 
         Example: update('6749b2b613be3a8fd0943d71',{"name":"qwerty", "email":"123@321.com"})
         """
-
         try:
             self._log_info(f"Update object with id {obj_id} called, updates: {updates}.")
-            result = self.collection.update_one(map_id(obj_id), {"$set": updates})
+            result = self.collection.update_one(
+                map_id(obj_id),
+                updates,
+                array_filters=array_filters
+            )
 
             if result.modified_count != 1:
                 self._log_warning(f"Update failed (modified {result.modified_count} objects).")
@@ -84,6 +95,7 @@ class BaseRepository(ABC, Generic[T]):
             return True
         except Exception as e:
             self._log_error(e)
+            return None
 
     def update_overwrite(self, obj_id: str, obj: T) -> bool:
         """Overrides object of given id. `id` in `obj` should be empty string."""
@@ -101,6 +113,7 @@ class BaseRepository(ABC, Generic[T]):
             return True
         except Exception as e:
             self._log_error(e)
+            return None
 
     def delete(self, obj_id: str) -> bool:
         try:
@@ -114,8 +127,9 @@ class BaseRepository(ABC, Generic[T]):
             return True
         except Exception as e:
             self._log_error(e)
+            return None
 
-    def find_all(self) -> List[T]:
+    def find_all(self) -> list[T]:
         try:
             self._log_info("Find all called.")
             results = list(self.collection.find({}))
@@ -123,8 +137,9 @@ class BaseRepository(ABC, Generic[T]):
             return self._docs_to_obj(results)
         except Exception as e:
             self._log_error(e)
+            return None
 
-    def get_many_by_ids(self, ids: List[str]) -> List[T]:
+    def get_many_by_ids(self, ids: list[str]) -> list[T]:
         try:
             self._log_info(f"Get objects by ids: {ids} called.")
             object_ids = map_ids(ids)
@@ -134,7 +149,7 @@ class BaseRepository(ABC, Generic[T]):
         except Exception as e:
             self._log_error(e)
 
-    def get_many_by_filter(self, query: dict) -> List[T]:
+    def get_many_by_filter(self, query: dict) -> list[T]:
         """Example: get_many_by_filter({"name": "qwerty", "email": "123@321.com"})"""
 
         try:
@@ -144,3 +159,4 @@ class BaseRepository(ABC, Generic[T]):
             return self._docs_to_obj(documents)
         except Exception as e:
             self._log_error(e)
+            return None

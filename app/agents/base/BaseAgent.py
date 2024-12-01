@@ -13,17 +13,16 @@ class BaseAgent(ABC, Agent):
         # tigase config
         config = MASConfiguration.load()
         self.agent_config = config.agents[self.__class__.__name__]
-        jid = self.agent_config.jid + "@" + config.server.name
-        super().__init__(jid, self.agent_config.password)
-
         self.id = self.agent_config.jid
         self.cid = custom_id
         if custom_id != "":
             self.id += f"_{custom_id}"
 
+        jid = self.id + "@" + config.server.name
+        super().__init__(jid, self.agent_config.password)
+
         # logger config
         self.logger = LogConfig.get_logger(f"Agent.{self.id}")
-        self.logger.info("Logger initialized for %s", self.id)
 
     async def start(self, auto_register: bool = True) -> None:
         """Waits for server to initialize"""
@@ -39,6 +38,11 @@ class BaseAgent(ABC, Agent):
                 self.logger.error('Server not found, trying again...')
                 sleep(3)
                 repeat = True
+
+    async def stop(self):
+        if not self.is_alive():
+            self.logger.info("STOP\n")
+        return await super().stop()
 
     async def setup(self):
         self.logger.info("setup - started")
