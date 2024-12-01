@@ -2,9 +2,18 @@
 
 ### Aby VSC podpowiadał fajnie składnie to zrobiłem sb venva
 
+Wersja z **virtualenv**:
 1. `sudo apt install python3-virtualenv`
 2. `virtualenv venv --python=/usr/bin/python3.10` - odpalenie venva z pytongiem 3.10, uwaga na ścieżke
 3. wczytać requirements
+
+Można wykorzystać też **condę**:
+1. `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh` - pobranie pliku `.sh`
+2. `bash Miniconda3-latest-Linux-x86_64.sh` - uruchomienie instalatora
+3. `source ~/.bashrc` - ponowne wczytanie ustawień terminala
+4. `conda create --name aasd python==3.10` - stworzenie wirtualnego środowiska o nazwie `aasd` z pytongiem 3.10
+5. `conda activate aasd` - uruchomienie stworzonego środowiska
+6. `pip install -r requirements.txt` - instalacja requirements w środowisku
 
 ### Bazowy agent - funkcjonalności
 
