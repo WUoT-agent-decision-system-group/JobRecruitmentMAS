@@ -23,6 +23,7 @@ services:
     container_name: spade_agent
     depends_on:
       - aasd_server
+      - aasd_mongodb
     deploy:
       resources:
         limits:
