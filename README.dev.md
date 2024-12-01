@@ -31,3 +31,13 @@
 jobOffer1.status = JobOfferStatus.CLOSED.value
 repository.update(jobOffer1.id, jobOffer1)
 ```
+
+### Dodawanie aplikacji do systemu (do bazy)
+
+1. W folderze `docs` umieścić plik CV w pdfie.
+2. Przejść do folderu `scripts`
+3. Wywołać `./apply_for_job.sh <joboffer_id> <candidate_id> <candidate_name> <candidate_surname> <candidate_email> <cv_filename> <cv-object-id (w formacie mongo)>`.
+
+   Skrypt wstawi plik do bazy oraz doda aplikacje do stanowiska pracy. UWAGA: powinna być max 1 aplikacja danego kandydata na dane stanowisko, uwaga na candidate_id
+
+   Przykład: `./apply_for_job.sh 674aff48c8c935e125c43939 674aff48c8c935e125c43326 jan testowy jantestowy@gmail.com cv-template.pdf fffffffffffffffffffffff1`
