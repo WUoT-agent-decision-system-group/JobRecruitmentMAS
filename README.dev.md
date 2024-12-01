@@ -49,6 +49,14 @@ repository.update(jobOffer1.id, jobOffer1)
    - w `BaseRepository` w `create` mamy to załatwione gdy przeciążymy metodę `to_db_format` w klasie modelowej.
    - do operacji `update` po prostu trzeba dobrze tworzyć słowniki. Pomocne metody: `map_id` i `map_ids` w `helpers`.
 
+### Podstawowa konfiguracja bazy danych
+
+Nasz system zakłada, że w kontenerze z mongo stworzona jest baza danych o nazie `aasd`. Również zakładamy, że w bazie znajduje się minimum jeden obiekt z ofertą pracy w kolekcji `jobOffers` (w przeciwnym przypadku kontener `spade_agent` kończy swoje działanie). Aby to uzyskać należy:
+1. Przejść do folderu `scripts`
+2. Wywołać skrypt: `./init_aasd_db.sh`
+
+Po wykonaniu tego skryptu warto uruchomić `docker-compose up aasd_system`. Sprawi to, że kontener `spade_agent` zacznie ponownie działać.
+
 ### Dodawanie aplikacji do systemu (do bazy)
 
 1. W folderze `docs` umieścić plik CV w pdfie.
