@@ -30,12 +30,13 @@ class MASConfiguration:
 
     @staticmethod
     def load():
-        with open(CONFIGFILE, 'r', encoding='utf-8') as config_file:
+        with open(CONFIGFILE, "r", encoding="utf-8") as config_file:
             config = json.load(config_file)
 
         server = ServerConfig(**config["server"])
-        agents = {name: AgentConfig(**agent)
-                  for name, agent in config["agents"].items()}
+        agents = {
+            name: AgentConfig(**agent) for name, agent in config["agents"].items()
+        }
         db = DBConfig(**config["db"])
 
         return MASConfiguration(server=server, agents=agents, db=db)

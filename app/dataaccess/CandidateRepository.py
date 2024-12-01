@@ -12,4 +12,6 @@ class CandidateRepository(BaseRepository):
         super().__init__(CandidateProfile, db_name, COLLECTION_NAME, logger)
 
     def update_applied_jobs(self, candidate_id: str, jobs: list[str]):
-        return self.update(candidate_id, {"$push": {"applied_jobs": {"$each": map_ids(jobs)}}})
+        return self.update(
+            candidate_id, {"$push": {"applied_jobs": {"$each": map_ids(jobs)}}}
+        )

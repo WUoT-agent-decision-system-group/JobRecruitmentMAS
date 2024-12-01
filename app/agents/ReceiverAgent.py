@@ -20,7 +20,9 @@ class ReceiverAgent(BaseAgent):
             if msg:
                 self.agent.logger.info("Received message: %s", msg.body)
             else:
-                self.agent.logger.info("No message received within the timeout, stopping agent.")
+                self.agent.logger.info(
+                    "No message received within the timeout, stopping agent."
+                )
                 await self.agent.stop()
 
     async def setup(self):

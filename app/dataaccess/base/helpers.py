@@ -3,7 +3,7 @@ from typing import TypeVar
 from bson.objectid import ObjectId
 from pymongo.collection import Mapping
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def map_id(obj_id: str) -> Mapping[str, ObjectId]:

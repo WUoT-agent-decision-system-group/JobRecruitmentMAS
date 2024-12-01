@@ -1,7 +1,7 @@
 FROM python:3.10 AS spade
 WORKDIR /app
-COPY requirements.txt /app
-RUN pip install -r ./requirements.txt
+COPY ./requirements/common.txt /app
+RUN pip install -r ./common.txt
 
 FROM spade
 WORKDIR /app

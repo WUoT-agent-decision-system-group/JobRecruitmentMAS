@@ -2,9 +2,22 @@
 
 ### Aby VSC podpowiadał fajnie składnie to zrobiłem sb venva
 
+Wersja z **virtualenv**:
 1. `sudo apt install python3-virtualenv`
 2. `virtualenv venv --python=/usr/bin/python3.10` - odpalenie venva z pytongiem 3.10, uwaga na ścieżke
-3. wczytać requirements
+3. `pip install -r requirements/dev.txt` - instalacja requirements w środowisku
+
+Można wykorzystać też **condę**:
+1. `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh` - pobranie pliku `.sh`
+2. `bash Miniconda3-latest-Linux-x86_64.sh` - uruchomienie instalatora
+3. `source ~/.bashrc` - ponowne wczytanie ustawień terminala
+4. `conda create --name aasd python==3.10` - stworzenie wirtualnego środowiska o nazwie `aasd` z pytongiem 3.10
+5. `conda activate aasd` - uruchomienie stworzonego środowiska
+6. `pip install -r requirements/dev.txt` - instalacja requirements w środowisku
+
+### Formatowanie
+
+Zainstalowanie zależności z pliku `dev.txt` prócz wymaganych paczek dodaje również dwa lintery - `black` i `isort`. Jeśli Wam się nie chce ustawiać formatowania w VSC, to aby sformatować, kod wystarczy odpalić: `make format`.
 
 ### Bazowy agent - funkcjonalności
 
@@ -35,6 +48,14 @@ repository.update(jobOffer1.id, jobOffer1)
 2. Mongo ma swój format idków, w momencie gdy czytamy go z bazy to w konstruktorach wszystkie id zamieniamy na stringi. Natomiast gdy robimy jakiś create/update to powinniśmy zawsze konwertować string do ObjectId.
    - w `BaseRepository` w `create` mamy to załatwione gdy przeciążymy metodę `to_db_format` w klasie modelowej.
    - do operacji `update` po prostu trzeba dobrze tworzyć słowniki. Pomocne metody: `map_id` i `map_ids` w `helpers`.
+
+### Podstawowa konfiguracja bazy danych
+
+Nasz system zakłada, że w kontenerze z mongo stworzona jest baza danych o nazie `aasd`. Również zakładamy, że w bazie znajduje się minimum jeden obiekt z ofertą pracy w kolekcji `jobOffers` (w przeciwnym przypadku kontener `spade_agent` kończy swoje działanie). Aby to uzyskać należy:
+1. Przejść do folderu `scripts`
+2. Wywołać skrypt: `./init_aasd_db.sh`
+
+Po wykonaniu tego skryptu warto uruchomić `docker-compose up aasd_system`. Sprawi to, że kontener `spade_agent` zacznie ponownie działać.
 
 ### Dodawanie aplikacji do systemu (do bazy)
 

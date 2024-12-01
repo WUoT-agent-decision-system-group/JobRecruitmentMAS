@@ -35,8 +35,9 @@ class JobOfferManagerAgent(BaseAgent):
             self.logger.error("Job offer not found.")
             await self.stop()
 
-        self.applications_to_init = [x for x in self.jobOffer.applications
-                                     if x.status != ApplicationStatus.NEW]
+        self.applications_to_init = [
+            x for x in self.jobOffer.applications if x.status != ApplicationStatus.NEW
+        ]
 
         self.initRmentsBehav = InitRecruitments()
         self.add_behaviour(self.initRmentsBehav)
@@ -59,13 +60,20 @@ class InitRecruitments(spade.behaviour.OneShotBehaviour):
         self.agent.applications_to_init = None
         for app in apps:
             if app.candidate_id not in self.agent.recruitments:
-                self.agent.logger.info("Starting RmentAgent for job '%s', candidate '%s'",
-                                       self.agent.jobOffer.id, app.candidate_id)
-                rment_agent = RecruitmentManagerAgent(self.agent.jobOffer.id, app.candidate_id)
+                self.agent.logger.info(
+                    "Starting RmentAgent for job '%s', candidate '%s'",
+                    self.agent.jobOffer.id,
+                    app.candidate_id,
+                )
+                rment_agent = RecruitmentManagerAgent(
+                    self.agent.jobOffer.id, app.candidate_id
+                )
                 self.agent.recruitments[app.candidate_id] = rment_agent
                 await rment_agent.start()
             else:
-                self.agent.logger.info("Skipping %s, agent already exists.", app.candidate_id)
+                self.agent.logger.info(
+                    "Skipping %s, agent already exists.", app.candidate_id
+                )
 
 
 class AwaitApplication(spade.behaviour.PeriodicBehaviour):
@@ -83,13 +91,15 @@ class AwaitApplication(spade.behaviour.PeriodicBehaviour):
             await self.process_candidates(new_applications)
 
     def check_new_applications(self) -> list[ApplicationDetails]:
-        new_applications = self.agent.jobOfferModule.get_new_applications(self.agent.job_offer_id)
+        new_applications = self.agent.jobOfferModule.get_new_applications(
+            self.agent.job_offer_id
+        )
 
         # ProcessApplication activity
         result = self.agent.jobOfferModule.change_application_status(
             self.agent.job_offer_id,
             [x.candidate_id for x in new_applications],
-            ApplicationStatus.PROCESSED
+            ApplicationStatus.PROCESSED,
         )
 
         return new_applications if result else []
@@ -113,9 +123,16 @@ class ProcessCandidate(spade.behaviour.OneShotBehaviour):
         applications = self.agent.candidates_to_process
         self.agent.candidates_to_process = None
 
-        candidate_profiles = [CandidateProfile(appl.candidate_id, appl.name, appl.surname,
-                                               appl.email, [self.agent.job_offer_id])
-                              for appl in applications]
+        candidate_profiles = [
+            CandidateProfile(
+                appl.candidate_id,
+                appl.name,
+                appl.surname,
+                appl.email,
+                [self.agent.job_offer_id],
+            )
+            for appl in applications
+        ]
 
         for cand in candidate_profiles:
             self.agent.candidateModule.try_add_candidate(cand)
