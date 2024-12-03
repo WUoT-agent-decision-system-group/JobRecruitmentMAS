@@ -2,7 +2,7 @@ from logging import Logger
 
 from bson.objectid import ObjectId
 
-from app.dataaccess.model.RecruitmentInfo import RecruitmentInfo
+from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.RecruitmentRepository import RecruitmentRepository
 
 
@@ -14,7 +14,7 @@ class RecruitmentModule:
     def __load_repositories(self, dbname: str):
         self.__recruitment_repository = RecruitmentRepository(dbname, self.logger)
 
-    def get_stages_info(self, job_offer_id) -> RecruitmentInfo:
+    def get_stages_info(self, job_offer_id) -> Recruitment:
         query = {"job_offer_id": ObjectId(job_offer_id)}
         data = self.__recruitment_repository.get_many_by_filter(query)
         if len(data) != 1:
@@ -24,3 +24,9 @@ class RecruitmentModule:
             )
             return None
         return data[0]
+
+    def get(self, _id: str) -> Recruitment:
+        return self.__recruitment_repository.get(_id)
+
+    def create(self, recruitment: Recruitment) -> str:
+        return self.__recruitment_repository.create(recruitment)
