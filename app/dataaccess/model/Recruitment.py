@@ -21,4 +21,5 @@ class Recruitment(BaseObject):
         self.candidate_id = str(candidate_id)
         self.stages = stages
 
-    def to_db_format(self): ...
+    def to_db_format(self):
+        delattr(self, "_id")

@@ -22,4 +22,5 @@ class RecruitmentStage(BaseObject):
         self.recruitment_id = str(recruitment_id)
         self.status = RecruitmentStageStatus(status)
 
-    def to_db_format(self): ...
+    def to_db_format(self):
+        delattr(self, "_id")

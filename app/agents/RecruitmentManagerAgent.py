@@ -71,7 +71,6 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
         **kwargs,
     ) -> Recruitment | RecruitmentStage:
         recruitment_obj = recruitment_obj_type(**kwargs)
-        delattr(recruitment_obj, "_id")
 
         id = recruitment_module.create(recruitment_obj)
         recruitment_obj._id = id

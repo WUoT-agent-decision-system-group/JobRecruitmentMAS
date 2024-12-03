@@ -66,3 +66,8 @@ Po wykonaniu tego skryptu warto uruchomić `docker-compose up aasd_system`. Spra
    Skrypt wstawi plik do bazy oraz doda aplikacje do stanowiska pracy. UWAGA: powinna być max 1 aplikacja danego kandydata na dane stanowisko, uwaga na candidate_id
 
    Przykład: `./apply_for_job.sh 674aff48c8c935e125c43939 674aff48c8c935e125c43326 jan testowy jantestowy@gmail.com cv-template.pdf fffffffffffffffffffffff1`
+
+### Umieszczanie w bazie nowego obiektu
+Istnieją dwie możliwości:
+1. Obiekt stworzony w kodzie ma już nadaną wartość atrybutu `_id`. Wtedy po prostu wystarczy przekazać ten obiekt do metody `create` z odpowiedniego repozytorium i MongoDB stworzy obiekt z podanym `_id`.
+2. Stworzony obiekt nie ma wartości atrybutu `_id` i chcemy, żeby MongoDB nadało je automatycznie. Wtedy w klasie odpowiedniego modelu należy przeciążyć metodę `to_db_format` i dodać do niej linijkę `delattr(self, _id)`. Chodzi o to, że metoda `to_db_format` jest wywoływana w metodzie `create` w klasie `BaseRepository` i domyślnie zamienia ona `_id` w postaci stringa na ObjectId. W tym przypadku chcemy usunąć atrybut `_id` z naszego obiektu, tak aby MongoDB samo je przydzieliło. Następnie nadane `_id` jest zwracane z metody `create`, a zatem można je ponownie przypisać do naszego obiektu.
