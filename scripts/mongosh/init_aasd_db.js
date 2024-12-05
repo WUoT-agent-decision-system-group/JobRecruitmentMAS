@@ -7,3 +7,7 @@ db.jobOffers.insertOne({
     "status": 0,
     "applications": []
 });
+
+db.recruitmentInstructions.insertOne({
+
+});

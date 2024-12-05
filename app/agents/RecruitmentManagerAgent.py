@@ -2,7 +2,7 @@ from typing import Type
 
 import spade.behaviour
 
-from app.dataaccess.model.Recruitment import Recruitment
+from app.dataaccess.model.Recruitment import Recruitment, RecruitmentStageInfo
 from app.dataaccess.model.RecruitmentStage import RecruitmentStage
 from app.modules.RecruitmentModule import RecruitmentModule
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
@@ -83,8 +83,9 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             "recruitment_id": self.agent.recruitment._id,
             "status": 1,
         }
+        recruitment_stages = []
 
-        for _ in range(STAGES_NUMBER):
+        for i in range(STAGES_NUMBER):
             recruitment_stage = await self.create_recruitment_object(
                 RecruitmentStage,
                 self.agent.recruitment_stage_module,
@@ -94,9 +95,16 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             rment_stage_agent = RecruitmentStageManagerAgent(
                 self.agent.recruitment._id, recruitment_stage
             )
+            recruitment_stages.append(recruitment_stage)
             await rment_stage_agent.start()
 
-            ## TO-DO: update stages array w recruitment
+            self.agent.logger.info(
+                f"{i}) Started RSM agent with rsm object id: {recruitment_stage._id}."
+            )
+
+        self.agent.recruitment_module.update_stages(
+            self.agent.recruitment, recruitment_stages
+        )
 
 
 class StageCommunication(spade.behaviour.CyclicBehaviour):
