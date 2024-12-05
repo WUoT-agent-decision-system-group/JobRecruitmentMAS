@@ -23,3 +23,5 @@ class Recruitment(BaseObject):
 
     def to_db_format(self):
         delattr(self, "_id")
+        self.job_offer_id = ObjectId(self.job_offer_id)
+        self.candidate_id = ObjectId(self.candidate_id)

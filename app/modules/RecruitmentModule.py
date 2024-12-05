@@ -37,7 +37,7 @@ class RecruitmentModule:
         self, recruitment: Recruitment, recruitment_stages: List[RecruitmentStage]
     ):
         recruitment_stages_info = list(
-            map(lambda rs: RecruitmentStageInfo(rs._id), recruitment_stages)
+            map(lambda rs: RecruitmentStageInfo(ObjectId(rs._id)), recruitment_stages)
         )
         recruitment.stages.extend(recruitment_stages_info)
 

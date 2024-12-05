@@ -2,8 +2,10 @@ from typing import Type
 
 import spade.behaviour
 
-from app.dataaccess.model.Recruitment import Recruitment, RecruitmentStageInfo
+from app.dataaccess.model.Recruitment import Recruitment
+from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
 from app.dataaccess.model.RecruitmentStage import RecruitmentStage
+from app.modules.RecruitmentInstructionModule import RecruitmentInstructionModule
 from app.modules.RecruitmentModule import RecruitmentModule
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
 
@@ -25,7 +27,11 @@ class RecruitmentManagerAgent(BaseAgent):
         self.recruitment_stage_module = RecruitmentStageModule(
             self.agent_config.dbname, self.logger
         )
+        self.recruitment_instruction_module = RecruitmentInstructionModule(
+            self.agent_config.dbname, self.logger
+        )
         self.recruitment: Recruitment = None
+        self.recruitment_instruction: RecruitmentInstruction = None
 
         # behaviours
         self.prepare_recruitment_behav: PrepareRecruitment = None
@@ -42,7 +48,7 @@ class RecruitmentManagerAgent(BaseAgent):
 
 
 class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
-    """Creates recruitment object and initiates RmentStageAgents (one per one stage)"""
+    """Creates recruitment object (if not present) and initiates RmentStageAgents (one per one stage)"""
 
     agent: RecruitmentManagerAgent
 
@@ -62,6 +68,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             **recruitment_attrs,
         )
 
+        await self.get_recruitment_instruction()
         await self.create_stage_agents()
 
     async def create_recruitment_object(
@@ -77,15 +84,31 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
 
         return recruitment_obj
 
+    async def get_recruitment_instruction(self):
+        self.agent.recruitment_instruction = (
+            self.agent.recruitment_instruction_module.get_by_job_offer_id(
+                self.agent.job_offer_id
+            )
+        )
+
     async def create_stage_agents(self):
         recruitment_stage_attrs = {
             "_id": "",
             "recruitment_id": self.agent.recruitment._id,
             "status": 1,
+            "type": "",
+            "priority": "",
         }
         recruitment_stages = []
 
-        for i in range(STAGES_NUMBER):
+        for i in range(self.agent.recruitment_instruction.stages_number):
+            recruitment_stage_attrs["type"] = (
+                self.agent.recruitment_instruction.stage_types[i].value
+            )
+            recruitment_stage_attrs["priority"] = (
+                self.agent.recruitment_instruction.stage_priorities[i]
+            )
+
             recruitment_stage = await self.create_recruitment_object(
                 RecruitmentStage,
                 self.agent.recruitment_stage_module,

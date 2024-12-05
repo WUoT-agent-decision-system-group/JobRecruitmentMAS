@@ -23,5 +23,6 @@ class RecruitmentStageModule:
     def create(self, recruitment_stage: RecruitmentStage) -> str:
         recruitment_stage_valued = deepcopy(recruitment_stage)
         recruitment_stage_valued.status = recruitment_stage.status.value
+        recruitment_stage_valued.type = recruitment_stage.type.value
 
         return self.__recruitment_stage_repository.create(recruitment_stage_valued)
