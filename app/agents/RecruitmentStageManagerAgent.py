@@ -7,31 +7,44 @@ from .base.BaseAgent import BaseAgent
 
 
 class RecruitmentStageManagerAgent(BaseAgent):
-    def __init__(self, recruitment_id: str, recruitment_stage: RecruitmentStage):
-        super().__init__(str.join("_", [recruitment_id, recruitment_stage._id]))
+    def __init__(
+        self, recruitment_id: str, identifier: int, recruitment_stage_attr: dict
+    ):
+        super().__init__(str.join("_", [recruitment_id, str(identifier)]))
 
-        self.recruitment_stage: RecruitmentStage = recruitment_stage
         self.recruitment_id = recruitment_id
+        self.recruitment_stage_attr = recruitment_stage_attr
         self.recruitment_stage_module = RecruitmentStageModule(
             self.agent_config.dbname, self.logger
         )
+        self.recruitment_stage: RecruitmentStage = None
 
         # behaviours
-        self.test_behav: TestBehav = None
+        self.prepare_recruitment_stage_behav: PrepareRecruitmentStage = None
 
     async def setup(self):
         await super().setup()
 
-        self.test_behav = TestBehav()
+        self.prepare_recruitment_stage_behav = PrepareRecruitmentStage()
 
-        self.add_behaviour(self.test_behav)
+        self.add_behaviour(self.prepare_recruitment_stage_behav)
 
 
-class TestBehav(spade.behaviour.OneShotBehaviour):
+class PrepareRecruitmentStage(spade.behaviour.OneShotBehaviour):
 
     agent: RecruitmentStageManagerAgent
 
     async def run(self):
-        self.agent.logger.info(
-            f"Hello from rmentStageAgent: {self.agent.recruitment_stage._id}"
+        await self.create_recruitment_stage()
+        self.agent.logger.info(self.agent.recruitment_stage_attr)
+
+    async def create_recruitment_stage(self):
+        self.agent.recruitment_stage_attr.update(
+            {"_id": "", "recruitment_id": self.agent.recruitment_id}
         )
+        self.agent.recruitment_stage = RecruitmentStage(
+            **self.agent.recruitment_stage_attr
+        )
+
+        id = self.agent.recruitment_stage_module.create(self.agent.recruitment_stage)
+        self.agent.recruitment_stage._id = id

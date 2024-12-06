@@ -3,7 +3,7 @@ from typing import List
 
 from bson.objectid import ObjectId
 
-from app.dataaccess.model.Recruitment import Recruitment, RecruitmentStageInfo
+from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentStage import RecruitmentStage
 from app.dataaccess.RecruitmentRepository import RecruitmentRepository
 
@@ -32,22 +32,3 @@ class RecruitmentModule:
 
     def create(self, recruitment: Recruitment) -> str:
         return self.__recruitment_repository.create(recruitment)
-
-    def update_stages(
-        self, recruitment: Recruitment, recruitment_stages: List[RecruitmentStage]
-    ):
-        recruitment_stages_info = list(
-            map(lambda rs: RecruitmentStageInfo(ObjectId(rs._id)), recruitment_stages)
-        )
-        recruitment.stages.extend(recruitment_stages_info)
-
-        recruitment_stages_info = list(
-            map(lambda rsi: rsi.__dict__, recruitment_stages_info)
-        )
-        self.__recruitment_repository.update(
-            recruitment._id, {"$push": {"stages": {"$each": recruitment_stages_info}}}
-        )
-
-        self.logger.info(
-            f"Updated stages array for recruitment with id: {recruitment._id}"
-        )

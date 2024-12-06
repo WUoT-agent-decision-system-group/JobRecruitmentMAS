@@ -24,9 +24,6 @@ class RecruitmentManagerAgent(BaseAgent):
         self.recruitment_module = RecruitmentModule(
             self.agent_config.dbname, self.logger
         )
-        self.recruitment_stage_module = RecruitmentStageModule(
-            self.agent_config.dbname, self.logger
-        )
         self.recruitment_instruction_module = RecruitmentInstructionModule(
             self.agent_config.dbname, self.logger
         )
@@ -55,34 +52,17 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
     async def run(self):
         self.agent.logger.info("PrepareRecruitment behaviour run.")
 
-        recruitment_attrs = {
-            "_id": "",
-            "job_offer_id": self.agent.job_offer_id,
-            "candidate_id": self.agent.candidate_id,
-            "stages": [],
-        }
-
-        self.agent.recruitment = await self.create_recruitment_object(
-            Recruitment,
-            self.agent.recruitment_module,
-            **recruitment_attrs,
-        )
-
+        await self.create_recruitment()
         await self.get_recruitment_instruction()
         await self.create_stage_agents()
 
-    async def create_recruitment_object(
-        self,
-        recruitment_obj_type: Type[Recruitment | RecruitmentStage],
-        recruitment_module: RecruitmentModule | RecruitmentStageModule,
-        **kwargs,
-    ) -> Recruitment | RecruitmentStage:
-        recruitment_obj = recruitment_obj_type(**kwargs)
+    async def create_recruitment(self):
+        self.agent.recruitment = Recruitment(
+            "", self.agent.job_offer_id, self.agent.candidate_id
+        )
 
-        id = recruitment_module.create(recruitment_obj)
-        recruitment_obj._id = id
-
-        return recruitment_obj
+        id = self.agent.recruitment_module.create(self.agent.recruitment)
+        self.agent.recruitment._id = id
 
     async def get_recruitment_instruction(self):
         self.agent.recruitment_instruction = (
@@ -92,42 +72,21 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
         )
 
     async def create_stage_agents(self):
-        recruitment_stage_attrs = {
-            "_id": "",
-            "recruitment_id": self.agent.recruitment._id,
-            "status": 1,
-            "type": "",
-            "priority": "",
-        }
-        recruitment_stages = []
-
         for i in range(self.agent.recruitment_instruction.stages_number):
-            recruitment_stage_attrs["type"] = (
-                self.agent.recruitment_instruction.stage_types[i].value
-            )
-            recruitment_stage_attrs["priority"] = (
-                self.agent.recruitment_instruction.stage_priorities[i]
-            )
-
-            recruitment_stage = await self.create_recruitment_object(
-                RecruitmentStage,
-                self.agent.recruitment_stage_module,
-                **recruitment_stage_attrs,
-            )
-
+            recruitment_stage_attr = {
+                "status": 1,
+                "type": self.agent.recruitment_instruction.stage_types[i].value,
+                "priority": self.agent.recruitment_instruction.stage_priorities[i],
+            }
             rment_stage_agent = RecruitmentStageManagerAgent(
-                self.agent.recruitment._id, recruitment_stage
+                self.agent.recruitment._id, i, recruitment_stage_attr
             )
-            recruitment_stages.append(recruitment_stage)
+
             await rment_stage_agent.start()
 
             self.agent.logger.info(
-                f"{i}) Started RSM agent with rsm object id: {recruitment_stage._id}."
+                f"{i}) Started RSM agent for recruitment with id: {self.agent.recruitment._id}."
             )
-
-        self.agent.recruitment_module.update_stages(
-            self.agent.recruitment, recruitment_stages
-        )
 
 
 class StageCommunication(spade.behaviour.CyclicBehaviour):
