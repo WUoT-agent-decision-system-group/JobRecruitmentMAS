@@ -23,4 +23,5 @@ pubsub () {
     'receiver' = { 'password' = 'receiver_password' }  # Create receiver JID
     'jom' = { 'password' = 'jom_password' }  
     'rment' = { 'password' = 'rment_password' }  
+    'analyzer' = { 'password' = 'analyzer_password' }  
 }

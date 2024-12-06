@@ -27,6 +27,11 @@
       "jid": "rment_stage",
       "password": "rment_stage_password",
       "dbname": "aasd"
+    },
+    "ApplicationAnalyzerAgent": {
+      "jid": "analyzer",
+      "password": "analyzer_password",
+      "dbname": "aasd"
     }
   },
   "db": {
