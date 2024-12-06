@@ -89,6 +89,7 @@ class AwaitApplication(spade.behaviour.PeriodicBehaviour):
         new_applications = self.check_new_applications()
         if len(new_applications) > 0:
             await self.process_candidates(new_applications)
+            # TODO: await self.trigger_analysis(new_applications)
 
     def check_new_applications(self) -> list[ApplicationDetails]:
         new_applications = self.agent.jobOfferModule.get_new_applications(
