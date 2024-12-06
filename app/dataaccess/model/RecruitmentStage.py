@@ -17,12 +17,14 @@ class RecruitmentStage(BaseObject):
         self,
         _id: str | ObjectId,
         recruitment_id: str | ObjectId,
+        identifier: int,
         status: int | RecruitmentStageStatus,
         type: int | StageType,
         priority: int,
     ):
         super().__init__(_id)
         self.recruitment_id = str(recruitment_id)
+        self.identifier = identifier
         self.status = RecruitmentStageStatus(status)
         self.type = StageType(type)
         self.priority = priority

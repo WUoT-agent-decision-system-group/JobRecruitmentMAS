@@ -1,5 +1,6 @@
 from copy import deepcopy
 from logging import Logger
+from typing import List, Optional
 
 from bson.objectid import ObjectId
 
@@ -19,6 +20,13 @@ class RecruitmentStageModule:
 
     def get(self, _id: str) -> RecruitmentStage:
         return self.__recruitment_stage_repository.get(_id)
+
+    def get_by_recruitment_and_identifier(
+        self, recruitment_id: str, identifier: int
+    ) -> Optional[List[RecruitmentStage]]:
+        return self.__recruitment_stage_repository.get_many_by_filter(
+            {"recruitment_id": ObjectId(recruitment_id), "identifier": identifier}
+        )
 
     def create(self, recruitment_stage: RecruitmentStage) -> str:
         recruitment_stage_valued = deepcopy(recruitment_stage)

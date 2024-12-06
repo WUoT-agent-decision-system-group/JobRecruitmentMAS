@@ -12,8 +12,6 @@ from app.modules.RecruitmentStageModule import RecruitmentStageModule
 from .base.BaseAgent import BaseAgent
 from .RecruitmentStageManagerAgent import RecruitmentStageManagerAgent
 
-STAGES_NUMBER = 2
-
 
 class RecruitmentManagerAgent(BaseAgent):
     def __init__(self, job_offer_id: str, candidate_id: str):
@@ -27,21 +25,58 @@ class RecruitmentManagerAgent(BaseAgent):
         self.recruitment_instruction_module = RecruitmentInstructionModule(
             self.agent_config.dbname, self.logger
         )
+        self.if_created = False
         self.recruitment: Recruitment = None
         self.recruitment_instruction: RecruitmentInstruction = None
 
         # behaviours
+        self.check_recruitments_behav: CheckRecruitments = None
         self.prepare_recruitment_behav: PrepareRecruitment = None
         self.stage_communication_behav: StageCommunication = None
 
     async def setup(self):
         await super().setup()
 
-        self.prepare_recruitment_behav = PrepareRecruitment()
+        self.check_recruitments_behav = CheckRecruitments()
         self.stage_communication_behav = StageCommunication()
 
-        self.add_behaviour(self.prepare_recruitment_behav)
+        self.add_behaviour(self.check_recruitments_behav)
         self.add_behaviour(self.stage_communication_behav)
+
+
+# TODO: generyczne zachowanie
+
+
+class CheckRecruitments(spade.behaviour.OneShotBehaviour):
+    """Checks whether recruitments with given job_offer_id, candidate_id and required stages are present in db"""
+
+    agent: RecruitmentManagerAgent
+
+    async def run(self):
+        self.agent.logger.info("CheckRecruitments behaviour run.")
+
+        await self.check_recruitments()
+
+        self.agent.prepare_recruitment_behav = PrepareRecruitment()
+        self.agent.add_behaviour(self.agent.prepare_recruitment_behav)
+
+    async def check_recruitments(self):
+        recruitments = self.agent.recruitment_module.get_by_job_and_candidate(
+            self.agent.job_offer_id, self.agent.candidate_id
+        )
+
+        if len(recruitments) == 0:
+            self.agent.if_created = False
+            self.agent.logger.info(
+                f"No recruitments found. Recruitment with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} to be created."
+            )
+        else:
+            self.agent.if_created = True
+            self.agent.recruitment = recruitments[0]
+
+            self.agent.logger.info(
+                f"Found recruitment with id: {recruitments[0]._id}. No recruitment objects will be created."
+            )
 
 
 class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
@@ -52,17 +87,9 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
     async def run(self):
         self.agent.logger.info("PrepareRecruitment behaviour run.")
 
-        await self.create_recruitment()
         await self.get_recruitment_instruction()
+        await self.create_recruitment()
         await self.create_stage_agents()
-
-    async def create_recruitment(self):
-        self.agent.recruitment = Recruitment(
-            "", self.agent.job_offer_id, self.agent.candidate_id
-        )
-
-        id = self.agent.recruitment_module.create(self.agent.recruitment)
-        self.agent.recruitment._id = id
 
     async def get_recruitment_instruction(self):
         self.agent.recruitment_instruction = (
@@ -71,15 +98,29 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             )
         )
 
+    async def create_recruitment(self):
+        if self.agent.if_created:
+            return
+
+        self.agent.recruitment = Recruitment(
+            "", self.agent.job_offer_id, self.agent.candidate_id
+        )
+
+        id = self.agent.recruitment_module.create(self.agent.recruitment)
+        self.agent.recruitment._id = id
+
     async def create_stage_agents(self):
         for i in range(self.agent.recruitment_instruction.stages_number):
             recruitment_stage_attr = {
+                "identifier": i,
                 "status": 1,
                 "type": self.agent.recruitment_instruction.stage_types[i].value,
                 "priority": self.agent.recruitment_instruction.stage_priorities[i],
             }
             rment_stage_agent = RecruitmentStageManagerAgent(
-                self.agent.recruitment._id, i, recruitment_stage_attr
+                self.agent.recruitment._id,
+                i,
+                recruitment_stage_attr,
             )
 
             await rment_stage_agent.start()
