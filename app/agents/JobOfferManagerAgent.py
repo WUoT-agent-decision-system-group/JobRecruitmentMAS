@@ -5,6 +5,7 @@ from app.dataaccess.model.CandidateProfile import CandidateProfile
 from app.dataaccess.model.JobOffer import ApplicationDetails, ApplicationStatus
 from app.modules.CandidateModule import CandidateModule
 from app.modules.JobOfferModule import JobOfferModule
+from spade.message import Message
 
 from .base.BaseAgent import BaseAgent
 
@@ -21,9 +22,11 @@ class JobOfferManagerAgent(BaseAgent):
         self.applications_to_init: list[ApplicationDetails] = None
         self.recruitments: dict[str, RecruitmentManagerAgent] = {}
         self.candidates_to_process: list[ApplicationDetails] = None
+        self.applications_to_process: list[ApplicationDetails] = None
 
         # behaviours
         self.processCandidateBehav: ProcessCandidate = None
+        self.triggerAnalysisBehav: TriggerAnalysis = None
         self.initRmentsBehav: InitRecruitments = None
         self.awaitApplicationBehav: AwaitApplication = None
 
@@ -89,7 +92,7 @@ class AwaitApplication(spade.behaviour.PeriodicBehaviour):
         new_applications = self.check_new_applications()
         if len(new_applications) > 0:
             await self.process_candidates(new_applications)
-            # TODO: await self.trigger_analysis(new_applications)
+            await self.trigger_analysis(new_applications)
 
     def check_new_applications(self) -> list[ApplicationDetails]:
         new_applications = self.agent.jobOfferModule.get_new_applications(
@@ -110,6 +113,12 @@ class AwaitApplication(spade.behaviour.PeriodicBehaviour):
         self.agent.processCandidateBehav = ProcessCandidate()
         self.agent.add_behaviour(self.agent.processCandidateBehav)
         await self.agent.processCandidateBehav.join()
+
+    async def trigger_analysis(self, new_applications: list[ApplicationDetails]):
+        self.agent.applications_to_process = new_applications
+        self.agent.triggerAnalysisBehav = TriggerAnalysis()
+        self.agent.add_behaviour(self.agent.triggerAnalysisBehav)
+        await self.agent.triggerAnalysisBehav.join()
 
 
 class ProcessCandidate(spade.behaviour.OneShotBehaviour):
@@ -146,3 +155,25 @@ class ProcessCandidate(spade.behaviour.OneShotBehaviour):
             self.agent.initRmentsBehav = InitRecruitments()
             self.agent.add_behaviour(self.agent.initRmentsBehav)
             await self.agent.initRmentsBehav.join()
+
+class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
+    """
+    Sends analyze request to ApplicationAnalyzer
+    Protocols/Activities in GAIA (role ApplicationHandler): TriggerAnalysis
+    """
+
+    agent: JobOfferManagerAgent
+
+    async def run(self):
+        self.agent.logger.info("TriggerAnalysis behaviour run.")
+
+        for app in self.agent.applications_to_process:
+            msg = Message(to="analyzer@aasd_server")  # Analyzer's JID
+            msg.set_metadata("performative", "inform")
+            msg.body = f"{self.agent.job_offer_id} {app.candidate_id}"
+
+            await self.send(msg)
+
+        self.agent.logger.info("Message(s) sent.")
+
+        self.agent.applications_to_process = None
