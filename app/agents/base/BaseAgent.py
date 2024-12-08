@@ -1,7 +1,10 @@
 from abc import ABC
 from time import sleep
+from typing import List
 
+from aioxmpp import JID
 from spade.agent import Agent
+from spade.message import Message
 
 from app.utils.configuration import MASConfiguration
 from app.utils.log_config import LogConfig
@@ -46,3 +49,18 @@ class BaseAgent(ABC, Agent):
 
     async def setup(self):
         self.logger.info("setup - started")
+
+    async def prepare_message(
+        self, to_jid: JID, performatives: List[str], ontologies: List[str], body: str
+    ) -> Message:
+        self.logger.info(f"Preparing message to agent with jid: {str(to_jid)}")
+        msg = Message(to=str(to_jid))
+
+        for p in performatives:
+            msg.set_metadata("performative", p)
+
+        for o in ontologies:
+            msg.set_metadata("ontology", o)
+
+        msg.body = body
+        return msg

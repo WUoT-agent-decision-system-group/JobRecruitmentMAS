@@ -34,3 +34,6 @@ class RecruitmentStageModule:
         recruitment_stage_valued.type = recruitment_stage.type.value
 
         return self.__recruitment_stage_repository.create(recruitment_stage_valued)
+
+    def update(self, _id: str, query: dict) -> None:
+        self.__recruitment_stage_repository.update(_id, {"$set": query})

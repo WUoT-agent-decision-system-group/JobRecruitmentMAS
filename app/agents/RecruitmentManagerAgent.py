@@ -101,7 +101,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             return
 
         self.agent.recruitment = Recruitment(
-            "", self.agent.job_offer_id, self.agent.candidate_id
+            "", self.agent.job_offer_id, self.agent.candidate_id, 1
         )
 
         id = self.agent.recruitment_module.create(self.agent.recruitment)
@@ -137,27 +137,25 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
     async def run(self):
         self.agent.logger.info("StageCommunication behaviour run.")
 
-        await self.receive_start_request()
+        await self.receive_and_send()
 
-    async def receive_start_request(self):
+    async def receive_and_send(self):
         msg = await self.receive(timeout=10)
-        if msg:
-            self.agent.logger.info(
-                f"Received message from rsm with identifier: {msg.body}."
-            )
+        if msg is None:
+            return
 
         data = msg.body.split("%")
-        msg = await self.prepare_message(data)
-        await self.send(msg)
+        self.agent.logger.info(f"Received message from rsm agent with jid: {data[0]}")
 
-    async def prepare_message(self, data: list):
-        self.agent.logger.info("Preparing message to rsm agent.")
-        msg = Message(to=data[0])
-
-        msg.set_metadata("performative", "request")
-        msg.set_metadata("ontology", "start")
-        msg.body = (
-            f"{self.agent.recruitment_instruction.stage_priorities[int(data[1])]}"
+        start_permission = await self.validate_priority(int(data[1]))
+        msg = await self.agent.prepare_message(
+            data[0], ["response"], ["start_permission"], f"{start_permission}"
         )
 
-        return msg
+        self.agent.logger.info(
+            "Sending message to rsm agent with the start permission."
+        )
+        await self.send(msg)
+
+    async def validate_priority(self, stage_priority: int) -> bool:
+        return self.agent.recruitment.current_priority == stage_priority

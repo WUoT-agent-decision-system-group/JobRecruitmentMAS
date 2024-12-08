@@ -1,7 +1,10 @@
 import spade.behaviour
 from spade.message import Message
 
-from app.dataaccess.model.RecruitmentStage import RecruitmentStage
+from app.dataaccess.model.RecruitmentStage import (
+    RecruitmentStage,
+    RecruitmentStageStatus,
+)
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
 
 from .base.BaseAgent import BaseAgent
@@ -111,21 +114,34 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
         await self.send_and_receive_instruction()
 
     async def send_and_receive_instruction(self):
-        msg = await self.prepare_message()
+        msg = await self.agent.prepare_message(
+            self.agent.rm_jid,
+            ["request"],
+            ["start_request"],
+            f"{self.agent.jid}%{self.agent.recruitment_stage.priority}",
+        )
 
         self.agent.logger.info("Sending message to rm agent with the request to start.")
         await self.send(msg)
 
         msg = await self.receive(timeout=10)
-        if msg:
-            self.agent.logger.info(f"Received message from rm agent: {msg.body}.")
+        if msg is None:
+            return
 
-    async def prepare_message(self):
-        self.agent.logger.info("Preparing message to rm agent.")
-        msg = Message(to=str(self.agent.rm_jid))
+        start_allowed = await self.evaluate_stage_start(msg.body)
+        if start_allowed:
+            self.kill()
 
-        msg.set_metadata("performative", "request")
-        msg.set_metadata("ontology", "start")
-        msg.body = f"{self.agent.jid}%{self.agent.recruitment_stage.priority}"
+    async def evaluate_stage_start(self, body: str) -> bool:
+        start_allowed = True if body == "True" else False
+        self.agent.logger.info(
+            f"Received message from rm agent with permission to start: {start_allowed}."
+        )
 
-        return msg
+        if start_allowed:
+            self.agent.recruitment_stage.status = RecruitmentStageStatus.IN_PROGRESS
+            self.agent.recruitment_stage_module.update(
+                self.agent.recruitment_stage._id, {"status": 2}
+            )
+
+        return start_allowed
