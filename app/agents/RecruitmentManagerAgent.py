@@ -1,6 +1,7 @@
 from typing import Type
 
 import spade.behaviour
+from spade.message import Message
 
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
@@ -42,9 +43,6 @@ class RecruitmentManagerAgent(BaseAgent):
 
         self.add_behaviour(self.check_recruitments_behav)
         self.add_behaviour(self.stage_communication_behav)
-
-
-# TODO: generyczne zachowanie
 
 
 class CheckRecruitments(spade.behaviour.OneShotBehaviour):
@@ -118,6 +116,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
                 "priority": self.agent.recruitment_instruction.stage_priorities[i],
             }
             rment_stage_agent = RecruitmentStageManagerAgent(
+                self.agent.jid,
                 self.agent.recruitment._id,
                 i,
                 recruitment_stage_attr,
@@ -131,5 +130,34 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
 
 
 class StageCommunication(spade.behaviour.CyclicBehaviour):
+    """Behaviour representing ManageStageRequest and ManageStageResponse protocols"""
+
+    agent: RecruitmentManagerAgent
+
     async def run(self):
-        pass
+        self.agent.logger.info("StageCommunication behaviour run.")
+
+        await self.receive_start_request()
+
+    async def receive_start_request(self):
+        msg = await self.receive(timeout=10)
+        if msg:
+            self.agent.logger.info(
+                f"Received message from rsm with identifier: {msg.body}."
+            )
+
+        data = msg.body.split("%")
+        msg = await self.prepare_message(data)
+        await self.send(msg)
+
+    async def prepare_message(self, data: list):
+        self.agent.logger.info("Preparing message to rsm agent.")
+        msg = Message(to=data[0])
+
+        msg.set_metadata("performative", "request")
+        msg.set_metadata("ontology", "start")
+        msg.body = (
+            f"{self.agent.recruitment_instruction.stage_priorities[int(data[1])]}"
+        )
+
+        return msg

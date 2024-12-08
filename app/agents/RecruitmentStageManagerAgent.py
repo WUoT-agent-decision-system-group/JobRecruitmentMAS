@@ -1,4 +1,5 @@
 import spade.behaviour
+from spade.message import Message
 
 from app.dataaccess.model.RecruitmentStage import RecruitmentStage
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
@@ -9,12 +10,14 @@ from .base.BaseAgent import BaseAgent
 class RecruitmentStageManagerAgent(BaseAgent):
     def __init__(
         self,
+        rm_jid: str,
         recruitment_id: str,
         identifier: int,
         recruitment_stage_attr: dict,
     ):
         super().__init__(str.join("_", [recruitment_id, str(identifier)]))
 
+        self.rm_jid = rm_jid
         self.recruitment_id = recruitment_id
         self.identifier = identifier
         self.recruitment_stage_attr = recruitment_stage_attr
@@ -27,12 +30,12 @@ class RecruitmentStageManagerAgent(BaseAgent):
         # behaviours
         self.check_recruitment_stages_behav: CheckRecruitmentStages = None
         self.prepare_recruitment_stage_behav: PrepareRecruitmentStage = None
+        self.manage_stage_behav: ManageState = None
 
     async def setup(self):
         await super().setup()
 
         self.check_recruitment_stages_behav = CheckRecruitmentStages()
-
         self.add_behaviour(self.check_recruitment_stages_behav)
 
 
@@ -79,6 +82,9 @@ class PrepareRecruitmentStage(spade.behaviour.OneShotBehaviour):
 
         await self.create_recruitment_stage()
 
+        self.agent.manage_stage_behav = ManageState(period=10)
+        self.agent.add_behaviour(self.agent.manage_stage_behav)
+
     async def create_recruitment_stage(self):
         if self.agent.if_created:
             return
@@ -92,3 +98,34 @@ class PrepareRecruitmentStage(spade.behaviour.OneShotBehaviour):
 
         id = self.agent.recruitment_stage_module.create(self.agent.recruitment_stage)
         self.agent.recruitment_stage._id = id
+
+
+class ManageState(spade.behaviour.PeriodicBehaviour):
+    """Behaviour representing ManageStage protocol (mainly, asking RM agent for the permission to start)"""
+
+    agent: RecruitmentStageManagerAgent
+
+    async def run(self):
+        self.agent.logger.info("ManageStage behaviour run.")
+
+        await self.send_and_receive_instruction()
+
+    async def send_and_receive_instruction(self):
+        msg = await self.prepare_message()
+
+        self.agent.logger.info("Sending message to rm agent with the request to start.")
+        await self.send(msg)
+
+        msg = await self.receive(timeout=10)
+        if msg:
+            self.agent.logger.info(f"Received message from rm agent: {msg.body}.")
+
+    async def prepare_message(self):
+        self.agent.logger.info("Preparing message to rm agent.")
+        msg = Message(to=str(self.agent.rm_jid))
+
+        msg.set_metadata("performative", "request")
+        msg.set_metadata("ontology", "start")
+        msg.body = f"{self.agent.jid}%{self.agent.recruitment_stage.priority}"
+
+        return msg
