@@ -41,15 +41,18 @@ class RecruitmentManagerAgent(BaseAgent):
         self.check_recruitments_behav: CheckRecruitments = None
         self.prepare_recruitment_behav: PrepareRecruitment = None
         self.stage_communication_behav: StageCommunication = None
+        self.application_rating_behav: ReceiveApplicationRating = None
 
     async def setup(self):
         await super().setup()
 
         self.check_recruitments_behav = CheckRecruitments()
         self.stage_communication_behav = StageCommunication()
+        self.application_rating_behav = ReceiveApplicationRating()
 
         self.add_behaviour(self.check_recruitments_behav)
         self.add_behaviour(self.stage_communication_behav)
+        self.add_behaviour(self.application_rating_behav)
 
 
 class CheckRecruitments(spade.behaviour.OneShotBehaviour):
@@ -252,3 +255,28 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
 
     async def validate_priority(self, stage_priority: int) -> bool:
         return self.agent.recruitment.current_priority == stage_priority
+
+
+class ReceiveApplicationRating(spade.behaviour.CyclicBehaviour):
+    """
+    Awaits application rating
+    Protocols/Activities in GAIA (role FeedbackHandler): ReceiveApplicationRating
+    """
+
+    agent: RecruitmentManagerAgent
+
+    async def run(self):
+        self.agent.logger.info("ReceiveApplicationRating behaviour run.")
+        
+        msg = await self.receive(timeout=10) # TODO: is timeout needed?
+        if msg is None:
+            return
+    
+        self.agent.logger.info("Received CV analysis result: %s", msg.body)
+
+        result = self.agent.recruitment_module.saveRating(self.agent.job_offer_id, self.agent.candidate_id, int(msg.body))
+
+        if result:
+            self.agent.logger.info(f"Successfully saved the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
+        else:
+            self.agent.logger.info(f"Failed to save the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
