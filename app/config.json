@@ -22,6 +22,11 @@
       "jid": "rment",
       "password": "rment_password",
       "dbname": "aasd"
+    },
+    "RecruitmentStageManagerAgent": {
+      "jid": "rment_stage",
+      "password": "rment_stage_password",
+      "dbname": "aasd"
     }
   },
   "db": {
