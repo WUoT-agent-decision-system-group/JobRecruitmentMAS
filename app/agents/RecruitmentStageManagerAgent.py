@@ -162,7 +162,8 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
         ):
             self.agent.recruitment_stage.status = RecruitmentStageStatus.IN_PROGRESS
             self.agent.recruitment_stage_module.update(
-                self.agent.recruitment_stage._id, {"status": 2}
+                self.agent.recruitment_stage._id,
+                {"status": RecruitmentStageStatus.IN_PROGRESS.value},
             )
 
         return start_allowed

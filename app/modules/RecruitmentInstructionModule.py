@@ -1,4 +1,5 @@
 from logging import Logger
+from typing import Optional
 
 from bson import ObjectId
 
@@ -18,7 +19,13 @@ class RecruitmentInstructionModule:
             dbname, self.logger
         )
 
-    def get_by_job_offer_id(self, job_offer_id: str) -> RecruitmentInstruction:
-        return self.__recruitment_stage_repository.get_many_by_filter(
-            {"job_offer_id": ObjectId(job_offer_id)}
-        )[0]
+    def get_by_job_offer_id(
+        self, job_offer_id: str
+    ) -> Optional[RecruitmentInstruction]:
+        try:
+            return self.__recruitment_stage_repository.get_many_by_filter(
+                {"job_offer_id": ObjectId(job_offer_id)}
+            )[0]
+        except IndexError:
+            self.logger.error("No recruitment instruction found.")
+            return None

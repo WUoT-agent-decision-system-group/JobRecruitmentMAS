@@ -34,3 +34,6 @@ class RecruitmentModule:
 
     def update(self, _id: str, query: dict) -> None:
         self.__recruitment_repository.update(_id, {"$set": query})
+
+    def increment(self, _id: str, query: dict) -> None:
+        self.__recruitment_repository.update(_id, {"$inc": query})

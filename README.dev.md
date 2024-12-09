@@ -71,3 +71,7 @@ Po wykonaniu tego skryptu warto uruchomić `docker-compose up aasd_system`. Spra
 Istnieją dwie możliwości:
 1. Obiekt stworzony w kodzie ma już nadaną wartość atrybutu `_id`. Wtedy po prostu wystarczy przekazać ten obiekt do metody `create` z odpowiedniego repozytorium i MongoDB stworzy obiekt z podanym `_id`.
 2. Stworzony obiekt nie ma wartości atrybutu `_id` i chcemy, żeby MongoDB nadało je automatycznie. Wtedy w klasie odpowiedniego modelu należy przeciążyć metodę `to_db_format` i dodać do niej linijkę `delattr(self, _id)` (bez wywoływania metody z klasy bazowej !). Chodzi o to, że metoda `to_db_format` jest wywoływana w metodzie `create` w klasie `BaseRepository` i domyślnie zamienia ona `_id` w postaci stringa na ObjectId. W tym przypadku chcemy usunąć atrybut `_id` z naszego obiektu, tak aby MongoDB samo je przydzieliło. Następnie nadane `_id` jest zwracane z metody `create`, a zatem można je ponownie przypisać do naszego obiektu.
+
+### Flow komunikacji pomiędzy RM agentem a RSM agentami
+Podczas tworzen
+

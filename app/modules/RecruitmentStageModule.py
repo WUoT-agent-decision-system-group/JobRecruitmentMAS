@@ -28,8 +28,12 @@ class RecruitmentStageModule:
             {"recruitment_id": ObjectId(recruitment_id), "identifier": identifier}
         )
 
-    def get_all(self) -> List[RecruitmentStage]:
-        return self.__recruitment_stage_repository.find_all()
+    def get_by_recruitment_and_priority(
+        self, recruitment_id: str, priority: int
+    ) -> List[RecruitmentStage]:
+        return self.__recruitment_stage_repository.get_many_by_filter(
+            {"recruitment_id": ObjectId(recruitment_id), "priority": priority}
+        )
 
     def create(self, recruitment_stage: RecruitmentStage) -> str:
         recruitment_stage_valued = deepcopy(recruitment_stage)

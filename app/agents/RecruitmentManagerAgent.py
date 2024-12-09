@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import spade.behaviour
 from spade.message import Message
@@ -35,7 +35,7 @@ class RecruitmentManagerAgent(BaseAgent):
         )
         self.if_created = False
         self.recruitment: Recruitment = None
-        self.recruitment_instruction: RecruitmentInstruction = None
+        self.recruitment_instruction: Optional[RecruitmentInstruction] = None
 
         # behaviours
         self.check_recruitments_behav: CheckRecruitments = None
@@ -103,6 +103,10 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             )
         )
 
+        if self.agent.recruitment_instruction is None:
+            self.agent.logger.error("Exiting agent - no recruitment instruction found.")
+            await self.agent.stop()
+
     async def create_recruitment(self):
         if self.agent.if_created:
             return
@@ -157,7 +161,7 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
     async def receive_and_dispatch(self):
         msg = await self.receive(timeout=30)
         if msg is None:
-            await self.check_stages_statuses()
+            await self.check_current_priority()
             return
 
         type, data = await self.agent.get_message_type_and_data(msg)
@@ -206,34 +210,35 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
 
     async def update_overall_result(self, stage_result: float):
         self.agent.recruitment.overall_result += stage_result
-        self.agent.recruitment_module.update(
+        self.agent.recruitment_module.increment(
             self.agent.recruitment._id,
-            {"overall_result": self.agent.recruitment.overall_result},
+            {"overall_result": stage_result},
         )
 
     async def should_update_priority(self):
-        recruitment_stages = self.agent.recruitment_stage_module.get_all()
-        should_continue = any(
-            rs.status == RecruitmentStageStatus.IN_PROGRESS
-            and rs.priority == self.agent.recruitment.current_priority
-            for rs in recruitment_stages
+        recruitment_stages = (
+            self.agent.recruitment_stage_module.get_by_recruitment_and_priority(
+                self.agent.recruitment._id, self.agent.recruitment.current_priority
+            )
+        )
+        should_change = all(
+            rs.status == RecruitmentStageStatus.DONE for rs in recruitment_stages
         )
 
-        if not should_continue:
+        if should_change:
             self.agent.logger.info(
                 f"Updating current priority to: {self.agent.recruitment.current_priority + 1}."
             )
 
             self.agent.recruitment.current_priority += 1
-            self.agent.recruitment_module.update(
+            self.agent.recruitment_module.increment(
                 self.agent.recruitment._id,
-                {"current_priority": self.agent.recruitment.current_priority},
+                {"current_priority": 1},
             )
 
-    async def check_stages_statuses(self):
-        recruitment_stages = self.agent.recruitment_stage_module.get_all()
-        should_end = all(
-            rs.status == RecruitmentStageStatus.DONE for rs in recruitment_stages
+    async def check_current_priority(self):
+        should_end = self.agent.recruitment.current_priority > max(
+            self.agent.recruitment_instruction.stage_priorities
         )
 
         if should_end:
