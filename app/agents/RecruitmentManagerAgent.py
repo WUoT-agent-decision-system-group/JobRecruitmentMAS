@@ -155,8 +155,9 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
         await self.receive_and_dispatch()
 
     async def receive_and_dispatch(self):
-        msg = await self.receive(timeout=10)
+        msg = await self.receive(timeout=30)
         if msg is None:
+            await self.check_stages_statuses()
             return
 
         type, data = await self.agent.get_message_type_and_data(msg)
@@ -202,8 +203,6 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
             "Sending message to rsm agent to acknowledge the receipt of stage result."
         )
         await self.send(msg)
-
-        await self.check_stages_statuses()
 
     async def update_overall_result(self, stage_result: float):
         self.agent.recruitment.overall_result += stage_result
