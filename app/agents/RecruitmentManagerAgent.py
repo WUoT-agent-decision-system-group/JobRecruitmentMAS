@@ -1,11 +1,15 @@
-from typing import Type
+from typing import List
 
 import spade.behaviour
 from spade.message import Message
 
+from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
-from app.dataaccess.model.RecruitmentStage import RecruitmentStage
+from app.dataaccess.model.RecruitmentStage import (
+    RecruitmentStage,
+    RecruitmentStageStatus,
+)
 from app.modules.RecruitmentInstructionModule import RecruitmentInstructionModule
 from app.modules.RecruitmentModule import RecruitmentModule
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
@@ -21,6 +25,9 @@ class RecruitmentManagerAgent(BaseAgent):
         self.job_offer_id = job_offer_id
         self.candidate_id = candidate_id
         self.recruitment_module = RecruitmentModule(
+            self.agent_config.dbname, self.logger
+        )
+        self.recruitment_stage_module = RecruitmentStageModule(
             self.agent_config.dbname, self.logger
         )
         self.recruitment_instruction_module = RecruitmentInstructionModule(
@@ -101,7 +108,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             return
 
         self.agent.recruitment = Recruitment(
-            "", self.agent.job_offer_id, self.agent.candidate_id, 1
+            "", self.agent.job_offer_id, self.agent.candidate_id, 1, 0.0
         )
 
         id = self.agent.recruitment_module.create(self.agent.recruitment)
@@ -130,32 +137,114 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
 
 
 class StageCommunication(spade.behaviour.CyclicBehaviour):
-    """Behaviour representing ManageStageRequest and ManageStageResponse protocols"""
+    """Behaviour representing ManageStageRequest, ManageStageResponse and ReceiveStageResult protocols"""
 
     agent: RecruitmentManagerAgent
+
+    def __init__(self):
+        super().__init__()
+
+        self.dispatcher = {
+            MessageType.START_REQUEST: self.handle_start_request,
+            MessageType.STAGE_RESULT: self.handle_stage_result,
+        }
 
     async def run(self):
         self.agent.logger.info("StageCommunication behaviour run.")
 
-        await self.receive_and_send()
+        await self.receive_and_dispatch()
 
-    async def receive_and_send(self):
+    async def receive_and_dispatch(self):
         msg = await self.receive(timeout=10)
         if msg is None:
             return
 
-        data = msg.body.split("%")
-        self.agent.logger.info(f"Received message from rsm agent with jid: {data[0]}")
+        type, data = await self.agent.get_message_type_and_data(msg)
+
+        handler = self.dispatcher.get(type, self.handle_unknown_message)
+        await handler(data)
+
+    async def handle_start_request(self, data: List[str]):
+        self.agent.logger.info(
+            f"Received message with start request from rsm agent with jid: {data[0]}"
+        )
 
         start_permission = await self.validate_priority(int(data[1]))
         msg = await self.agent.prepare_message(
-            data[0], ["response"], ["start_permission"], f"{start_permission}"
+            data[0],
+            "response",
+            "start_permission",
+            MessageType.START_RESPONSE,
+            [f"{start_permission}"],
         )
 
         self.agent.logger.info(
             "Sending message to rsm agent with the start permission."
         )
         await self.send(msg)
+
+    async def handle_stage_result(self, data: List[str]):
+        self.agent.logger.info(
+            f"Received message with stage result from rsm agent with jid: {data[0]}"
+        )
+
+        await self.update_overall_result(float(data[1]))
+        await self.should_update_priority()
+
+        msg = await self.agent.prepare_message(
+            data[0],
+            "response",
+            "ack",
+            MessageType.STAGE_RESULT_ACK,
+            ["ACK"],
+        )
+        self.agent.logger.info(
+            "Sending message to rsm agent to acknowledge the receipt of stage result."
+        )
+        await self.send(msg)
+
+        await self.check_stages_statuses()
+
+    async def update_overall_result(self, stage_result: float):
+        self.agent.recruitment.overall_result += stage_result
+        self.agent.recruitment_module.update(
+            self.agent.recruitment._id,
+            {"overall_result": self.agent.recruitment.overall_result},
+        )
+
+    async def should_update_priority(self):
+        recruitment_stages = self.agent.recruitment_stage_module.get_all()
+        should_continue = any(
+            rs.status == RecruitmentStageStatus.IN_PROGRESS
+            and rs.priority == self.agent.recruitment.current_priority
+            for rs in recruitment_stages
+        )
+
+        if not should_continue:
+            self.agent.logger.info(
+                f"Updating current priority to: {self.agent.recruitment.current_priority + 1}."
+            )
+
+            self.agent.recruitment.current_priority += 1
+            self.agent.recruitment_module.update(
+                self.agent.recruitment._id,
+                {"current_priority": self.agent.recruitment.current_priority},
+            )
+
+    async def check_stages_statuses(self):
+        recruitment_stages = self.agent.recruitment_stage_module.get_all()
+        should_end = all(
+            rs.status == RecruitmentStageStatus.DONE for rs in recruitment_stages
+        )
+
+        if should_end:
+            self.agent.logger.info(
+                "All recruitment stages are DONE. Ending StageCommunication behaviour..."
+            )
+            self.kill()
+
+    async def handle_unknown_message(self):
+        self.agent.logger.warning(f"Unknown message type received, ignoring...")
 
     async def validate_priority(self, stage_priority: int) -> bool:
         return self.agent.recruitment.current_priority == stage_priority

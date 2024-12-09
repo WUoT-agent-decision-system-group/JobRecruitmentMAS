@@ -31,3 +31,6 @@ class RecruitmentModule:
 
     def create(self, recruitment: Recruitment) -> str:
         return self.__recruitment_repository.create(recruitment)
+
+    def update(self, _id: str, query: dict) -> None:
+        self.__recruitment_repository.update(_id, {"$set": query})

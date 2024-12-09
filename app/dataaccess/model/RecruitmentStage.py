@@ -21,6 +21,7 @@ class RecruitmentStage(BaseObject):
         status: int | RecruitmentStageStatus,
         type: int | StageType,
         priority: int,
+        result: float,
     ):
         super().__init__(_id)
         self.recruitment_id = str(recruitment_id)
@@ -28,6 +29,7 @@ class RecruitmentStage(BaseObject):
         self.status = RecruitmentStageStatus(status)
         self.type = StageType(type)
         self.priority = priority
+        self.result = result
 
     def to_db_format(self):
         delattr(self, "_id")

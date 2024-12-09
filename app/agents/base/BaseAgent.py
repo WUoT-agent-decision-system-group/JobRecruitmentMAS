@@ -1,13 +1,16 @@
 from abc import ABC
 from time import sleep
-from typing import List
+from typing import List, Tuple
 
 from aioxmpp import JID
 from spade.agent import Agent
 from spade.message import Message
 
+from app.dataaccess.model.MessageType import MessageType
 from app.utils.configuration import MASConfiguration
 from app.utils.log_config import LogConfig
+
+DATA_SEPARATOR = "%"
 
 
 class BaseAgent(ABC, Agent):
@@ -51,16 +54,26 @@ class BaseAgent(ABC, Agent):
         self.logger.info("setup - started")
 
     async def prepare_message(
-        self, to_jid: JID, performatives: List[str], ontologies: List[str], body: str
+        self,
+        to_jid: JID,
+        performative: str,
+        ontology: str,
+        type: MessageType,
+        data: List[str],
     ) -> Message:
         self.logger.info(f"Preparing message to agent with jid: {str(to_jid)}")
         msg = Message(to=str(to_jid))
 
-        for p in performatives:
-            msg.set_metadata("performative", p)
+        msg.set_metadata("performative", performative)
+        msg.set_metadata("ontology", ontology)
 
-        for o in ontologies:
-            msg.set_metadata("ontology", o)
-
-        msg.body = body
+        data.insert(0, str(type.value))
+        msg.body = DATA_SEPARATOR.join(data)
         return msg
+
+    async def get_message_type_and_data(
+        self, msg: Message
+    ) -> Tuple[MessageType, List[str]]:
+        data = msg.body.split(DATA_SEPARATOR)
+
+        return MessageType(int(data[0])), data[1:]

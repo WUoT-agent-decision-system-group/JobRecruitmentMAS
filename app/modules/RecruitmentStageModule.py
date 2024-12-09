@@ -28,6 +28,9 @@ class RecruitmentStageModule:
             {"recruitment_id": ObjectId(recruitment_id), "identifier": identifier}
         )
 
+    def get_all(self) -> List[RecruitmentStage]:
+        return self.__recruitment_stage_repository.find_all()
+
     def create(self, recruitment_stage: RecruitmentStage) -> str:
         recruitment_stage_valued = deepcopy(recruitment_stage)
         recruitment_stage_valued.status = recruitment_stage.status.value
