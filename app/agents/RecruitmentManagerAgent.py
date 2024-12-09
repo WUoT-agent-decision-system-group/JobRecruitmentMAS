@@ -119,7 +119,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
         self.agent.recruitment._id = id
 
     async def create_stage_agents(self):
-        for i in range(self.agent.recruitment_instruction.stages_number):
+        for i in range(len(self.agent.recruitment_instruction.stage_priorities)):
             recruitment_stage_attr = {
                 "identifier": i,
                 "status": 1,
