@@ -180,7 +180,7 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
 
         for app in to_analyze:
             msg = await self.agent.prepare_message(
-                f"{self.analyzerJID}_{random.randint(1, self.agent.analyzers_count)}@{self.config.server.name}",
+                f"{self.agent.analyzerJID}_{random.randint(1, self.agent.analyzers_count)}@{self.agent.config.server.name}",
                 ["request"],
                 ["analyze"],
                 f"{self.agent.job_offer_id}%{app.candidate_id}"
