@@ -49,3 +49,12 @@ class JobOfferModule:
         ]
         self.logger.info("Found %d new applications.", len(new_appl))
         return new_appl
+    
+    def get_processed_applications(self, job_offer_id: str):
+        self.logger.info("Checking processed applications...")
+        jobOffer: JobOffer = self.__job_offers_repository.get(job_offer_id)
+        new_appl = [
+            x for x in jobOffer.applications if x.status == ApplicationStatus.PROCESSED
+        ]
+        self.logger.info("Found %d processed applications.", len(new_appl))
+        return new_appl

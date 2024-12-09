@@ -1,12 +1,14 @@
 import spade
+
 from agents.JobOfferManagerAgent import JobOfferManagerAgent
+from agents.ApplicationAnalyzerAgent import ApplicationAnalyzerAgent
 from dataaccess.model.JobOffer import JobOffer
 from modules.JobOfferModule import JobOfferModule
-from agents.ApplicationAnalyzerAgent import ApplicationAnalyzerAgent
 from utils.log_config import LogConfig
 
 from app.utils.configuration import MASConfiguration
 
+ANALYZER_INSTANCES = 2
 
 def get_module() -> JobOfferModule:
     logger = LogConfig.get_logger("init")
@@ -16,9 +18,10 @@ def get_module() -> JobOfferModule:
 
 
 async def create_agents(jobOffers: list[JobOffer]) -> list[spade.agent.Agent]:
-    agents = [JobOfferManagerAgent(x.id) for x in jobOffers]
+    agents = [JobOfferManagerAgent(x.id, ANALYZER_INSTANCES) for x in jobOffers]
 
-    agents.append(ApplicationAnalyzerAgent())
+    for _ in range(0, ANALYZER_INSTANCES):
+        agents.append(ApplicationAnalyzerAgent())
 
     for a in agents:
         await a.start()
