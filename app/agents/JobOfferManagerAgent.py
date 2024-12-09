@@ -1,6 +1,7 @@
 import spade.behaviour
 import random
 
+from app.agents import ApplicationAnalyzerAgent
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
 from app.dataaccess.model.CandidateProfile import CandidateProfile
 from app.dataaccess.model.JobOffer import ApplicationDetails, ApplicationStatus
@@ -24,6 +25,8 @@ class JobOfferManagerAgent(BaseAgent):
         self.recruitments: dict[str, RecruitmentManagerAgent] = {}
         self.candidates_to_process: list[ApplicationDetails] = None
         self.applications_to_analyze: list[ApplicationDetails] = None
+
+        self.analyzerJID = self.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].jid
 
         # behaviours
         self.processCandidateBehav: ProcessCandidate = None
@@ -177,7 +180,7 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
 
         for app in to_analyze:
             msg = await self.agent.prepare_message(
-                f"analyzer_{random.randint(1, self.agent.analyzers_count)}@aasd_server",
+                f"{self.analyzerJID}_{random.randint(1, self.agent.analyzers_count)}@{self.config.server.name}",
                 ["request"],
                 ["analyze"],
                 f"{self.agent.job_offer_id}%{app.candidate_id}"
@@ -185,6 +188,6 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
 
             await self.send(msg)
 
-        self.agent.logger.info("Message(s) sent.")
+        self.agent.logger.info("Sent message(s) to analyzer agent with the request to analyze CV.")
 
         self.agent.applications_to_analyze = None
