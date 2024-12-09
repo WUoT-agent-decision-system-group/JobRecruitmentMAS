@@ -1,4 +1,5 @@
 import random
+import time
 import spade.behaviour
 
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
@@ -62,6 +63,8 @@ class Analyze(spade.behaviour.CyclicBehaviour):
             return
         
         # RateCandidate activity
+        time.sleep(10)
+        
         analysis_result = random.randint(0, 100)
 
         result = self.agent.jobOfferModule.change_application_status(
