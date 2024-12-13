@@ -1,9 +1,10 @@
+import asyncio
 import random
-import time
 import spade.behaviour
 
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
 from app.dataaccess.model.JobOffer import ApplicationStatus
+from app.dataaccess.model.MessageType import MessageType
 from app.modules.JobOfferModule import JobOfferModule
 from app.utils.configuration import MASConfiguration
 
@@ -45,17 +46,17 @@ class Analyze(spade.behaviour.CyclicBehaviour):
         self.agent.logger.info("Analyze behaviour run.")
 
         # AnalyzeRequest protocol
-        msg = await self.receive(timeout=10) # TODO: is timeout needed?
+        msg = await self.receive(timeout=30)
         if msg is None:
             return
         
         self.agent.logger.info("Received analyze request: %s", msg.body)
 
-        body = msg.body.split("%")
+        _, data = await self.agent.get_message_type_and_data(msg)
 
         result = self.agent.jobOfferModule.change_application_status(
-            body[0],
-            [body[1]],
+            data[0],
+            [data[1]],
             ApplicationStatus.IN_ANALYSIS,
         )
 
@@ -63,13 +64,13 @@ class Analyze(spade.behaviour.CyclicBehaviour):
             return
         
         # RateCandidate activity
-        time.sleep(10)
+        await asyncio.sleep(60)
         
         analysis_result = random.randint(0, 100)
 
         result = self.agent.jobOfferModule.change_application_status(
-            body[0],
-            [body[1]],
+            data[0],
+            [data[1]],
             ApplicationStatus.ANALYZED,
         )
 
@@ -78,10 +79,11 @@ class Analyze(spade.behaviour.CyclicBehaviour):
         
         # AnalyzeResponse protocol
         msg = await self.agent.prepare_message(
-            f"{self.agent.rmentJID}_{body[0]}_{body[1]}@{self.agent.config.server.name}", 
-            ["response"], 
-            ["analyze"], 
-            f"{analysis_result}"
+            f"{self.agent.rmentJID}_{data[0]}_{data[1]}@{self.agent.config.server.name}", 
+            "response", 
+            "analyze", 
+            MessageType.ANALYSIS_RESULT,
+            [f"{analysis_result}"]
         )
 
         await self.send(msg)

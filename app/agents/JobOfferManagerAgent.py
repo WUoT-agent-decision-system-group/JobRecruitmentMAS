@@ -5,6 +5,7 @@ from app.agents import ApplicationAnalyzerAgent
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
 from app.dataaccess.model.CandidateProfile import CandidateProfile
 from app.dataaccess.model.JobOffer import ApplicationDetails, ApplicationStatus
+from app.dataaccess.model.MessageType import MessageType
 from app.modules.CandidateModule import CandidateModule
 from app.modules.JobOfferModule import JobOfferModule
 
@@ -14,7 +15,7 @@ AWAIT_APPLICATION_PERIOD = 5
 
 
 class JobOfferManagerAgent(BaseAgent):
-    def __init__(self, job_offer_id, analyzers_count):
+    def __init__(self, job_offer_id: str, analyzers_count: int):
         super().__init__(job_offer_id)
         self.jobOfferModule = JobOfferModule(self.agent_config.dbname, self.logger)
         self.candidateModule = CandidateModule(self.agent_config.dbname, self.logger)
@@ -181,9 +182,10 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
         for app in to_analyze:
             msg = await self.agent.prepare_message(
                 f"{self.agent.analyzerJID}_{random.randint(1, self.agent.analyzers_count)}@{self.agent.config.server.name}",
-                ["request"],
-                ["analyze"],
-                f"{self.agent.job_offer_id}%{app.candidate_id}"
+                "request",
+                "analyze",
+                MessageType.ANALYSIS_REQUEST,
+                [self.agent.job_offer_id, app.candidate_id]
             )
 
             await self.send(msg)
