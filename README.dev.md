@@ -72,6 +72,15 @@ Istnieją dwie możliwości:
 1. Obiekt stworzony w kodzie ma już nadaną wartość atrybutu `_id`. Wtedy po prostu wystarczy przekazać ten obiekt do metody `create` z odpowiedniego repozytorium i MongoDB stworzy obiekt z podanym `_id`.
 2. Stworzony obiekt nie ma wartości atrybutu `_id` i chcemy, żeby MongoDB nadało je automatycznie. Wtedy w klasie odpowiedniego modelu należy przeciążyć metodę `to_db_format` i dodać do niej linijkę `delattr(self, _id)` (bez wywoływania metody z klasy bazowej !). Chodzi o to, że metoda `to_db_format` jest wywoływana w metodzie `create` w klasie `BaseRepository` i domyślnie zamienia ona `_id` w postaci stringa na ObjectId. W tym przypadku chcemy usunąć atrybut `_id` z naszego obiektu, tak aby MongoDB samo je przydzieliło. Następnie nadane `_id` jest zwracane z metody `create`, a zatem można je ponownie przypisać do naszego obiektu.
 
+### Flow analizy CV
+`JOM` skanuje przeprocesowane aplikacje i po natrafieniu na jakieś natychmaist wysyła do `AnalyzerAgent` wiadomość o każdym z tych zgłoszeń. Instacji analizatorów jest kilka, a ich wybór podejmowany jest losowo w celu zapewnienia load balancingu. Liczbę instancji analizatora kontroluje zmienna `ANALYZER_INSTANCES` w `main.py`. 
+Analizator po otrzymaniu wiadomości o potrzebie analizy CV dołączonego do aplikacji:
+
+1. zmienia jej stan na `IN_ANALYSIS`
+2. przeprowadza analizę w ramach aktywności RateCandidate (śpi minutę)
+3. zmienia stan aplikacji na `ANALYZED`
+4. przesyła wiadomość z randomowym wynikiem analizy do `RecruitmentManagerAgent`, który zapisuje ją w bazie
+
 ### Flow komunikacji pomiędzy RM agentem a RSM agentami
 - Podczas tworzenia bazy daych (skrypt: `./init_aasd_db.sh`) tworzy się obiekt `RecruitmentInstruction`, który zawiera informacje dotyczące szczegółów przeprowadzania kolejnych etapów rekrutacji.
 - Domyślnie w bazie znajduje się instrukcja, która posiada tablicę `stage_priorities` równą [1,1,2] (oznacza to, że najpierw mają wystartować 2 pierwsze agenty, a trzeci musi poczekać) oraz tablicę `stage_types` równą [1,2,3] (czyli agent pierwszy ma typ 1 itd.).
