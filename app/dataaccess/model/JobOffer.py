@@ -46,9 +46,11 @@ class JobOffer(BaseObject):
         description: str,
         status: JobOfferStatus,
         applications: dict,
+        recruiter_id: str | ObjectId,
     ):
         super().__init__(_id)
         self.name = name
         self.description = description
         self.status = JobOfferStatus(status)
         self.applications = [ApplicationDetails(**appl) for appl in applications]
+        self.recruiter_id = recruiter_id

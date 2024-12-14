@@ -43,10 +43,10 @@ class Analyze(spade.behaviour.CyclicBehaviour):
     agent: ApplicationAnalyzerAgent
 
     async def run(self):
-        self.agent.logger.info("Analyze behaviour run.")
+        self.agent.logger.info("Waiting for application analisis request.")
 
         # AnalyzeRequest protocol
-        msg = await self.receive(timeout=30)
+        msg = await self.receive(timeout=120)
         if msg is None:
             return
         
@@ -64,7 +64,7 @@ class Analyze(spade.behaviour.CyclicBehaviour):
             return
         
         # RateCandidate activity
-        await asyncio.sleep(60)
+        await asyncio.sleep(10)
         
         analysis_result = random.randint(0, 100)
 

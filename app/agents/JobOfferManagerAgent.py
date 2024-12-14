@@ -11,7 +11,7 @@ from app.modules.JobOfferModule import JobOfferModule
 
 from .base.BaseAgent import BaseAgent
 
-AWAIT_APPLICATION_PERIOD = 5
+AWAIT_APPLICATION_PERIOD = 15
 
 
 class JobOfferManagerAgent(BaseAgent):
@@ -34,6 +34,7 @@ class JobOfferManagerAgent(BaseAgent):
         self.triggerAnalysisBehav: TriggerAnalysis = None
         self.initRmentsBehav: InitRecruitments = None
         self.awaitApplicationBehav: AwaitApplication = None
+        self.getStatusResponse: GetStatusResponse = None
 
     async def setup(self):
         await super().setup()
@@ -51,6 +52,8 @@ class JobOfferManagerAgent(BaseAgent):
         self.add_behaviour(self.initRmentsBehav)
         self.awaitApplicationBehav = AwaitApplication(period=AWAIT_APPLICATION_PERIOD)
         self.add_behaviour(self.awaitApplicationBehav)
+        self.getStatusResponse = GetStatusResponse()
+        self.add_behaviour(self.getStatusResponse)
 
 
 class InitRecruitments(spade.behaviour.OneShotBehaviour):
@@ -193,3 +196,44 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
         self.agent.logger.info("Sent message(s) to analyzer agent with the request to analyze CV.")
 
         self.agent.applications_to_analyze = None
+
+
+class GetStatusResponse(spade.behaviour.CyclicBehaviour):
+    """
+    Sends analyze request to RecruiterManager
+    Protocols/Activities in GAIA (role JobOfferManager): GetStatusRequest, GetStatusResponse
+    """
+
+    agent: JobOfferManagerAgent
+
+    async def run(self):
+        msg = await self.receive(timeout=120)
+        if msg is None:
+            return
+        
+        self.agent.logger.info(f"Received get status request from {msg.sender}")
+        type, _  = await self.agent.get_message_type_and_data(msg) 
+
+        if type != MessageType.STATUS_REQUEST:
+            self.agent.logger.warning("Received an unknown or invalid message.")
+            return
+        
+        jobOffer = self.agent.jobOfferModule.get(self.agent.job_offer_id)
+        if jobOffer is None:
+            self.agent.logger.error("Job offer not found.")
+            await self.agent.stop()
+
+
+        self.agent.logger.info(f"{jobOffer}")
+
+        msg = await self.agent.prepare_message(
+            f"{msg.sender}", 
+            "response", 
+            "status", 
+            MessageType.STATUS_RESPONSE,
+            [f"{jobOffer._id}",f"{jobOffer.name}", f"{jobOffer.status.value}", f"{jobOffer.description}", f"{len(jobOffer.applications)}"]
+        )
+
+        await self.send(msg)
+
+        self.agent.logger.info(f"Sent message status result to {msg.sender}.")

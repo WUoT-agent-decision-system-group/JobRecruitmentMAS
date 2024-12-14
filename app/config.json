@@ -32,6 +32,11 @@
       "jid": "analyzer",
       "password": "analyzer_password",
       "dbname": "aasd"
+    },
+    "RecruiterAgent": {
+      "jid": "rer",
+      "password": "rer_password",
+      "dbname": "aasd"
     }
   },
   "db": {
