@@ -4,7 +4,6 @@ from typing import List, Optional
 from bson.objectid import ObjectId
 
 from app.dataaccess.model.Recruitment import Recruitment
-from app.dataaccess.model.RecruitmentStage import RecruitmentStage
 from app.dataaccess.RecruitmentRepository import RecruitmentRepository
 
 
@@ -32,8 +31,8 @@ class RecruitmentModule:
     def create(self, recruitment: Recruitment) -> str:
         return self.__recruitment_repository.create(recruitment)
 
-    def update(self, _id: str, query: dict) -> None:
-        self.__recruitment_repository.update(_id, {"$set": query})
+    def update(self, _id: str, query: dict) -> bool:
+        return self.__recruitment_repository.update(_id, {"$set": query})
 
     def increment(self, _id: str, query: dict) -> None:
         self.__recruitment_repository.update(_id, {"$inc": query})

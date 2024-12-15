@@ -1,13 +1,11 @@
 from typing import List, Optional
 
 import spade.behaviour
-from spade.message import Message
 
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
 from app.dataaccess.model.RecruitmentStage import (
-    RecruitmentStage,
     RecruitmentStageStatus,
 )
 from app.modules.RecruitmentInstructionModule import RecruitmentInstructionModule
@@ -40,16 +38,16 @@ class RecruitmentManagerAgent(BaseAgent):
         # behaviours
         self.check_recruitments_behav: CheckRecruitments = None
         self.prepare_recruitment_behav: PrepareRecruitment = None
-        self.stage_communication_behav: StageCommunication = None
+        self.agent_communication_behav: AgentCommunication = None
 
     async def setup(self):
         await super().setup()
 
         self.check_recruitments_behav = CheckRecruitments()
-        self.stage_communication_behav = StageCommunication()
+        self.agent_communication_behav = AgentCommunication()
 
         self.add_behaviour(self.check_recruitments_behav)
-        self.add_behaviour(self.stage_communication_behav)
+        self.add_behaviour(self.agent_communication_behav)
 
 
 class CheckRecruitments(spade.behaviour.OneShotBehaviour):
@@ -140,8 +138,8 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             )
 
 
-class StageCommunication(spade.behaviour.CyclicBehaviour):
-    """Behaviour representing ManageStageRequest, ManageStageResponse and ReceiveStageResult protocols"""
+class AgentCommunication(spade.behaviour.CyclicBehaviour):
+    """Behaviour representing ManageStageRequest, ManageStageResponse, ReceiveStageResult and ReceiveApplicationRating protocols"""
 
     agent: RecruitmentManagerAgent
 
@@ -151,10 +149,11 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
         self.dispatcher = {
             MessageType.START_REQUEST: self.handle_start_request,
             MessageType.STAGE_RESULT: self.handle_stage_result,
+            MessageType.ANALYSIS_RESULT: self.handle_analysis_result,
         }
 
     async def run(self):
-        self.agent.logger.info("StageCommunication behaviour run.")
+        self.agent.logger.info("AgentCommunication behaviour run.")
 
         await self.receive_and_dispatch()
 
@@ -243,9 +242,31 @@ class StageCommunication(spade.behaviour.CyclicBehaviour):
 
         if should_end:
             self.agent.logger.info(
-                "All recruitment stages are DONE. Ending StageCommunication behaviour..."
+                "All recruitment stages are DONE. Ending AgentCommunication behaviour..."
             )
             self.kill()
+
+    async def handle_analysis_result(self, data: List[str]):
+        self.agent.logger.info(
+            f"Received message with CV analysis result equal to {data[0]}"
+        )
+
+        recruitments = self.agent.recruitment_module.get_by_job_and_candidate(
+            self.agent.job_offer_id, 
+            self.agent.candidate_id,
+        )
+        if len(recruitments) == 0:
+            f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
+            return
+        
+        result = self.agent.recruitment_module.update(
+            recruitments[0]._id, 
+            {"application_rating": int(data[0])}
+        )
+        if result:
+            self.agent.logger.info(f"Successfully saved the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
+        else:
+            self.agent.logger.info(f"Failed to save the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
 
     async def handle_unknown_message(self):
         self.agent.logger.warning(f"Unknown message type received, ignoring...")

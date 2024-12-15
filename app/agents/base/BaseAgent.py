@@ -17,14 +17,14 @@ class BaseAgent(ABC, Agent):
     def __init__(self, custom_id: str = ""):
 
         # tigase config
-        config = MASConfiguration.load()
-        self.agent_config = config.agents[self.__class__.__name__]
+        self.config = MASConfiguration.load()
+        self.agent_config = self.config.agents[self.__class__.__name__]
         self.id = self.agent_config.jid
         self.cid = custom_id
         if custom_id != "":
             self.id += f"_{custom_id}"
 
-        jid = self.id + "@" + config.server.name
+        jid = self.id + "@" + self.config.server.name
         super().__init__(jid, self.agent_config.password)
 
         # logger config

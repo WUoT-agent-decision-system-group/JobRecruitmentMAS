@@ -11,11 +11,13 @@ class Recruitment(BaseObject):
         candidate_id: str | ObjectId,
         current_priority: int,
         overall_result: float,
+        application_rating: int | None = None,
     ):
         super().__init__(_id)
         self.job_offer_id = str(job_offer_id)
         self.candidate_id = str(candidate_id)
         self.current_priority = current_priority
+        self.application_rating = application_rating
         self.overall_result = overall_result
 
     def to_db_format(self):
