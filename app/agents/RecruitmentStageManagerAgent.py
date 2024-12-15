@@ -1,6 +1,7 @@
+import random
 import spade.behaviour
-from spade.message import Message
 
+from agents.NotificationAgent import NotificationAgent
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.RecruitmentStage import (
     RecruitmentStage,
@@ -165,6 +166,21 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
                 self.agent.recruitment_stage._id,
                 {"status": RecruitmentStageStatus.IN_PROGRESS.value},
             )
+            prefix = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].jid
+            instances = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].defined_instances
+            
+            msg = await self.agent.prepare_message(
+                f"{prefix}_{random.randint(1, instances)}@{self.agent.config.server.name}",
+                "request",
+                "notif",
+                MessageType.NOTIF_CANDIDATE_RMENT_REQUEST,
+                [f"{self.agent.recruitment_id}", f"The stage of the type {self.agent.recruitment_stage.type} can be started!"]
+            )
+    
+            await self.send(msg)
+
+            self.agent.logger.info("Sent message to notification agent with the notif request.")
+
 
         return start_allowed
 

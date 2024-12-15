@@ -12,13 +12,8 @@ from .base.BaseAgent import BaseAgent
 
 
 class ApplicationAnalyzerAgent(BaseAgent):
-    _instances: int = 0
-
-    def __init__(
-        self,
-    ):
-        ApplicationAnalyzerAgent._instances = ApplicationAnalyzerAgent._instances + 1
-        super().__init__(f"{ApplicationAnalyzerAgent._instances}")
+    def __init__(self, index :int):
+        super().__init__(f"{index}")
 
         self.rmentJID = self.config.agents[RecruitmentManagerAgent.__name__.split('.')[-1]].jid
 

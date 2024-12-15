@@ -15,13 +15,13 @@ AWAIT_APPLICATION_PERIOD = 15
 
 
 class JobOfferManagerAgent(BaseAgent):
-    def __init__(self, job_offer_id: str, analyzers_count: int):
+    def __init__(self, job_offer_id: str):
         super().__init__(job_offer_id)
         self.jobOfferModule = JobOfferModule(self.agent_config.dbname, self.logger)
         self.candidateModule = CandidateModule(self.agent_config.dbname, self.logger)
         self.job_offer_id = job_offer_id
         self.jobOffer = None
-        self.analyzers_count = analyzers_count
+        self.analyzers_count = self.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].defined_instances
         self.applications_to_init: list[ApplicationDetails] = None
         self.recruitments: dict[str, RecruitmentManagerAgent] = {}
         self.candidates_to_process: list[ApplicationDetails] = None
@@ -222,9 +222,6 @@ class GetStatusResponse(spade.behaviour.CyclicBehaviour):
         if jobOffer is None:
             self.agent.logger.error("Job offer not found.")
             await self.agent.stop()
-
-
-        self.agent.logger.info(f"{jobOffer}")
 
         msg = await self.agent.prepare_message(
             f"{msg.sender}", 

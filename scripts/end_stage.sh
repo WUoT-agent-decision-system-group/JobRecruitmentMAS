@@ -8,8 +8,8 @@ fi
 STAGE_IDENTIFIER=$1
 STAGE_RESULT=$2
 
-if [[ ! "$STAGE_IDENTIFIER" =~ ^[0-2]$ ]]; then
-    echo "Error: stage identifier must be 0, 1, or 2."
+if [[ ! "$STAGE_IDENTIFIER" =~ ^[a-fA-F0-9]{24}$ ]]; then
+    echo "Error: stage identifier must be a valid ObjectId (24-character hex)."
     exit 2
 fi
 
@@ -27,7 +27,7 @@ echo "$RES" > $TMP_FILE_PATH
 
 if [ $? -ne 0 ]; then
     echo "Error during replacement."
-    exit 1
+    exit 4
 fi
 
 docker exec -it mongodb mongosh --file "/home/ubuntu/scripts/${TMP_FILE_PATH}"

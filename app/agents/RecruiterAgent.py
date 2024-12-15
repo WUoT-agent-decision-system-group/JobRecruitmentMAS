@@ -1,4 +1,3 @@
-import asyncio
 import spade
 from app.agents import JobOfferManagerAgent
 from app.dataaccess.model import JobOffer, Recruiter

@@ -1,7 +1,9 @@
+import random
 from typing import List, Optional
 
 import spade.behaviour
 
+from app.agents import NotificationAgent
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
@@ -244,6 +246,25 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             self.agent.logger.info(
                 "All recruitment stages are DONE. Ending AgentCommunication behaviour..."
             )
+
+            recruitments = self.agent.recruitment_module.get_by_job_and_candidate(self.agent.job_offer_id, self.agent.candidate_id)   
+            if len(recruitments) == 0:
+                f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
+                self.kill() 
+
+            prefix = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].jid
+            instances = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].defined_instances
+            msg = await self.agent.prepare_message(
+                f"{prefix}_{random.randint(1, instances)}@{self.agent.config.server.name}",
+                "request",
+                "notif",
+                MessageType.NOTIF_CANDIDATE_CAN_REQUEST,
+                [f"{recruitments[0].candidate_id}", "Congratulations on completing all stages of recruitment. we will get back to you soon"]
+            )
+
+            await self.send(msg)
+
+            self.agent.logger.info("Sent message to notification agent with the notif request.")
             self.kill()
 
     async def handle_analysis_result(self, data: List[str]):
@@ -256,7 +277,7 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             self.agent.candidate_id,
         )
         if len(recruitments) == 0:
-            f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
+            self.agent.logger.info(f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found.")
             return
         
         result = self.agent.recruitment_module.update(

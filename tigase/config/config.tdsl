@@ -25,5 +25,6 @@ pubsub () {
     'rment' = { 'password' = 'rment_password' }
     'rment_stage' = { 'password' = 'rment_stage_password' }  
     'analyzer' = { 'password' = 'analyzer_password' }
-    'recruiter' = { 'password' = 'rer_password' }    
+    'rer' = { 'password' = 'rer_password' }   
+    'notif' = { 'password' = 'notif_password' }   
 }
