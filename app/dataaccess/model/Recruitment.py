@@ -10,6 +10,7 @@ class Recruitment(BaseObject):
         job_offer_id: str | ObjectId,
         candidate_id: str | ObjectId,
         current_priority: int,
+        notif_sent: bool,
         overall_result: float,
         application_rating: int | None = None,
     ):
@@ -17,6 +18,7 @@ class Recruitment(BaseObject):
         self.job_offer_id = str(job_offer_id)
         self.candidate_id = str(candidate_id)
         self.current_priority = current_priority
+        self.notif_sent = notif_sent
         self.application_rating = application_rating
         self.overall_result = overall_result
 

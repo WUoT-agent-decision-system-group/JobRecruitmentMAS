@@ -148,6 +148,7 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
             self.agent.add_behaviour(self.agent.track_stage_behav)
 
             self.kill()
+            return
 
     async def evaluate_stage_start(self, body: str) -> bool:
         start_allowed = True if body == "True" else False

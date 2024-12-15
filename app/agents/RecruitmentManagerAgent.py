@@ -110,7 +110,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
             return
 
         self.agent.recruitment = Recruitment(
-            "", self.agent.job_offer_id, self.agent.candidate_id, 1, 0.0
+            "", self.agent.job_offer_id, self.agent.candidate_id, 1, False, 0.0
         )
 
         id = self.agent.recruitment_module.create(self.agent.recruitment)
@@ -235,6 +235,11 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             if len(recruitments) == 0:
                 f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
                 self.kill() 
+                return
+            
+            if recruitments[0].notif_sent == True:
+                self.kill()
+                return
 
             prefix = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].jid
             instances = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].defined_instances
@@ -247,9 +252,13 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             )
 
             await self.send(msg)
-
+            self.agent.recruitment_module.update(
+                recruitments[0]._id,
+                {"notif_sent": True},
+            )
             self.agent.logger.info("Sent message to notification agent with the notif request.")
             self.kill()
+            return
 
     async def handle_analysis_result(self, data: List[str]):
         self.agent.logger.info("Received message with CV analysis result equal to %s", data[0])
