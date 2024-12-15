@@ -73,15 +73,13 @@ class CheckRecruitments(spade.behaviour.OneShotBehaviour):
         if len(recruitments) == 0:
             self.agent.if_created = False
             self.agent.logger.info(
-                f"No recruitments found. Recruitment with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} to be created."
+                "No recruitments found. Recruitment with job_offer_id: %s and candidate_id: %s to be created.", self.agent.job_offer_id, self.agent.candidate_id
             )
         else:
             self.agent.if_created = True
             self.agent.recruitment = recruitments[0]
 
-            self.agent.logger.info(
-                f"Found recruitment with id: {recruitments[0]._id}. No recruitment objects will be created."
-            )
+            self.agent.logger.info("Found recruitment with id: %s. No recruitment objects will be created.", recruitments[0]._id)
 
 
 class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
@@ -135,9 +133,7 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
 
             await rment_stage_agent.start()
 
-            self.agent.logger.info(
-                f"{i}) Started RSM agent for recruitment with id: {self.agent.recruitment._id}."
-            )
+            self.agent.logger.info("%d) Started RSM agent for recruitment with id: %s.", i, self.agent.recruitment._id)
 
 
 class AgentCommunication(spade.behaviour.CyclicBehaviour):
@@ -171,9 +167,7 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         await handler(data)
 
     async def handle_start_request(self, data: List[str]):
-        self.agent.logger.info(
-            f"Received message with start request from rsm agent with jid: {data[0]}"
-        )
+        self.agent.logger.info("Received message with start request from rsm agent with jid: %s", data[0])
 
         start_permission = await self.validate_priority(int(data[1]))
         msg = await self.agent.prepare_message(
@@ -184,15 +178,11 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             [f"{start_permission}"],
         )
 
-        self.agent.logger.info(
-            "Sending message to rsm agent with the start permission."
-        )
+        self.agent.logger.info("Sending message to rsm agent with the start permission.")
         await self.send(msg)
 
     async def handle_stage_result(self, data: List[str]):
-        self.agent.logger.info(
-            f"Received message with stage result from rsm agent with jid: {data[0]}"
-        )
+        self.agent.logger.info("Received message with stage result from rsm agent with jid: %s", data[0])
 
         await self.update_overall_result(float(data[1]))
         await self.should_update_priority()
@@ -204,9 +194,7 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             MessageType.STAGE_RESULT_ACK,
             ["ACK"],
         )
-        self.agent.logger.info(
-            "Sending message to rsm agent to acknowledge the receipt of stage result."
-        )
+        self.agent.logger.info("Sending message to rsm agent to acknowledge the receipt of stage result.")
         await self.send(msg)
 
     async def update_overall_result(self, stage_result: float):
@@ -227,9 +215,7 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         )
 
         if should_change:
-            self.agent.logger.info(
-                f"Updating current priority to: {self.agent.recruitment.current_priority + 1}."
-            )
+            self.agent.logger.info("Updating current priority to: %d.", self.agent.recruitment.current_priority + 1)
 
             self.agent.recruitment.current_priority += 1
             self.agent.recruitment_module.increment(
@@ -243,9 +229,7 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         )
 
         if should_end:
-            self.agent.logger.info(
-                "All recruitment stages are DONE. Ending AgentCommunication behaviour..."
-            )
+            self.agent.logger.info("All recruitment stages are DONE. Ending AgentCommunication behaviour...")
 
             recruitments = self.agent.recruitment_module.get_by_job_and_candidate(self.agent.job_offer_id, self.agent.candidate_id)   
             if len(recruitments) == 0:
@@ -268,16 +252,14 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             self.kill()
 
     async def handle_analysis_result(self, data: List[str]):
-        self.agent.logger.info(
-            f"Received message with CV analysis result equal to {data[0]}"
-        )
+        self.agent.logger.info("Received message with CV analysis result equal to %s", data[0])
 
         recruitments = self.agent.recruitment_module.get_by_job_and_candidate(
             self.agent.job_offer_id, 
             self.agent.candidate_id,
         )
         if len(recruitments) == 0:
-            self.agent.logger.info(f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found.")
+            self.agent.logger.info("No recruitments with job_offer_id: %s and candidate_id: %s found.",self.agent.job_offer_id, self.agent.candidate_id )
             return
         
         result = self.agent.recruitment_module.update(
@@ -285,12 +267,12 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             {"application_rating": int(data[0])}
         )
         if result:
-            self.agent.logger.info(f"Successfully saved the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
+            self.agent.logger.info("Successfully saved the candidate %s rating for job offer %s", self.agent.candidate_id, self.agent.job_offer_id)
         else:
-            self.agent.logger.info(f"Failed to save the candidate {self.agent.candidate_id} rating for job offer {self.agent.candidate_id}")
+            self.agent.logger.info("Failed to save the candidate %s rating for job offer %s", self.agent.candidate_id, self.agent.job_offer_id)
 
     async def handle_unknown_message(self):
-        self.agent.logger.warning(f"Unknown message type received, ignoring...")
+        self.agent.logger.warning("Unknown message type received, ignoring...")
 
     async def validate_priority(self, stage_priority: int) -> bool:
         return self.agent.recruitment.current_priority == stage_priority

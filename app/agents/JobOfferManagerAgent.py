@@ -211,7 +211,7 @@ class GetStatusResponse(spade.behaviour.CyclicBehaviour):
         if msg is None:
             return
         
-        self.agent.logger.info(f"Received get status request from {msg.sender}")
+        self.agent.logger.info("Received get status request from %s.", msg.sender)
         type, _  = await self.agent.get_message_type_and_data(msg) 
 
         if type != MessageType.STATUS_REQUEST:
@@ -233,4 +233,4 @@ class GetStatusResponse(spade.behaviour.CyclicBehaviour):
 
         await self.send(msg)
 
-        self.agent.logger.info(f"Sent message status result to {msg.sender}.")
+        self.agent.logger.info("Sent message status result to %s.", msg.sender)

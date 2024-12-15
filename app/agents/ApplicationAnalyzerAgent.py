@@ -6,7 +6,6 @@ from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
 from app.dataaccess.model.JobOffer import ApplicationStatus
 from app.dataaccess.model.MessageType import MessageType
 from app.modules.JobOfferModule import JobOfferModule
-from app.utils.configuration import MASConfiguration
 
 from .base.BaseAgent import BaseAgent
 

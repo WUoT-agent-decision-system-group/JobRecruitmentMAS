@@ -26,7 +26,7 @@ class RecruiterAgent(BaseAgent):
             self.logger.error("Recruiter information not found.")
             await self.stop()
 
-        self.logger.info(f"Hello! I am representant of {self.recruiter.name}, {self.recruiter.surname}.")
+        self.logger.info("Hello! I am representant of %s, %s.",self.recruiter.name, self.recruiter.surname)
         self.get_job_offerts_stats_behav = GetStatus(period=GET_STATUS_PERIOD) 
         self.add_behaviour(self.get_job_offerts_stats_behav)
 
@@ -42,11 +42,9 @@ class GetStatus(spade.behaviour.PeriodicBehaviour):
     async def run(self):
         if not self.agent.present_analysis_behav:
             self.agent.logger.info("GetStatus behaviour run.")
-            self.agent.logger.info(f"{self.agent.offerts_id}")
             for offert_id in self.agent.offerts_id:
-                self.agent.logger.info(f"{offert_id}")
                 prefix = self.agent.config.agents[JobOfferManagerAgent.__name__.split('.')[-1]].jid
-                self.agent.logger.info(f"try to send to {prefix}_{offert_id}")
+                self.agent.logger.info("Try to send to %s_%s", prefix, offert_id)
                 msg = await self.agent.prepare_message(
                     f"{prefix}_{offert_id}@{self.agent.config.server.name}",
                     "request",
@@ -55,7 +53,7 @@ class GetStatus(spade.behaviour.PeriodicBehaviour):
                     []
                 )
                 await self.send(msg)
-                self.agent.logger.info(f"A message has been sent to {prefix}_{offert_id}.")
+                self.agent.logger.info("A message has been sent to %s_%s", prefix, offert_id)
             self.agent.logger.info("A message has been sent to job agents requesting status.")
         
             self.agent.present_analysis_behav = PresentAnalysis()
@@ -75,7 +73,7 @@ class PresentAnalysis(spade.behaviour.OneShotBehaviour):
     async def on_start(self):
         self.expected_offerts = set(self.agent.offerts_id)
         self.responses = {} 
-        self.agent.logger.info(f"Expecting responses from job offer managers: {self.expected_offerts}")
+        self.agent.logger.info("Expecting responses from job offer managers: %s", self.expected_offerts)
 
     async def run(self):
         self.agent.logger.info("Waiting for job offer status responses...")
@@ -83,23 +81,22 @@ class PresentAnalysis(spade.behaviour.OneShotBehaviour):
             msg = await self.receive(timeout=GET_STATUS_PERIOD / (len(self.expected_offerts)+1))  
 
             if msg:
-                self.agent.logger.info(f"Received message from {msg.sender}: {msg.body}")
+                self.agent.logger.info("Received message from %s", msg.sender)
                 type, data = await self.agent.get_message_type_and_data(msg)
                                 
                 if type == MessageType.STATUS_RESPONSE:
-                    self.responses[data[0]] = [data[1], data[2], data[3], data[4] ]
-                    self.agent.logger.info(f"Collected status for offert {data[0]}.")
+                    self.responses[data[0]] = [data[1], data[2], data[3], data[4]]
                 else:
-                    self.agent.logger.warning(f"Received an unknown or invalid message for offert {data[0]}.")
+                    self.agent.logger.warning("Received an unknown or invalid message for offert %s.", data[0])
             else:
-                self.agent.logger.warning(f"Timeout reached for offert {data[0]}, no response received.")
+                self.agent.logger.warning("Timeout reached for offert %s, no response received.",data[0])
 
         if set(self.responses.keys()) == self.expected_offerts:
             self.agent.logger.info("All responses received. Proceeding with analysis.")
             self.perform_analysis()
         else:
             missing_offerts = self.expected_offerts - set(self.responses.keys())
-            self.agent.logger.warning(f"Analysis incomplete. Missing responses for: {missing_offerts}")
+            self.agent.logger.warning("Analysis incomplete. Missing responses for: %s.", missing_offerts)
 
     def perform_analysis(self):
         """
@@ -118,4 +115,4 @@ class PresentAnalysis(spade.behaviour.OneShotBehaviour):
                          f"Status: { JobOffer.JobOfferStatus(int(status))}\n" \
                          f"Total Applications: {int(applications)}"
             
-            self.agent.logger.info(f"Detailed Analysis Report:\n{offer_analysis}")
+            self.agent.logger.info("Detailed Analysis Report:\n%s", offer_analysis)

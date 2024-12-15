@@ -71,16 +71,14 @@ class CheckRecruitmentStages(spade.behaviour.OneShotBehaviour):
         if len(recruitment_stages) == 0:
             self.agent.if_created = False
             self.agent.logger.info(
-                f"No recruitment stages found. Recruitment stage with recruitment: {self.agent.recruitment_id} and identifier: {self.agent.identifier} to be created."
+                "No recruitment stages found. Recruitment stage with recruitment: %s and identifier: %s to be created.", self.agent.recruitment_id, self.agent.identifier 
             )
         else:
             self.agent.if_created = True
             self.agent.recruitment_stage = recruitment_stages[0]
 
             await self.check_stage_status()
-            self.agent.logger.info(
-                f"Found recruitment stage with id: {recruitment_stages[0]._id}. No recruitment stage objects will be created."
-            )
+            self.agent.logger.info("Found recruitment stage with id: %s. No recruitment stage objects will be created.", recruitment_stages[0]._id)
 
     async def check_stage_status(self):
         if self.agent.recruitment_stage.status == RecruitmentStageStatus.DONE:
@@ -153,9 +151,7 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
 
     async def evaluate_stage_start(self, body: str) -> bool:
         start_allowed = True if body == "True" else False
-        self.agent.logger.info(
-            f"Received message from rm agent with permission to start: {start_allowed}."
-        )
+        self.agent.logger.info("Received message from rm agent with permission to start: %s.", start_allowed)
 
         if (
             start_allowed
@@ -224,7 +220,5 @@ class TrackStage(spade.behaviour.PeriodicBehaviour):
 
         _, data = await self.agent.get_message_type_and_data(msg)
         if data[0] == "ACK":
-            self.agent.logger.info(
-                "Rment agent received stage result. Exiting agent..."
-            )
+            self.agent.logger.info("Rment agent received stage result. Exiting agent...")
             await self.agent.stop()

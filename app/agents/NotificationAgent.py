@@ -1,6 +1,5 @@
 import spade
 
-from app.dataaccess.base.helpers import map_id
 from app.dataaccess.model.MessageType import MessageType
 from app.modules.CandidateModule import CandidateModule
 from app.modules.RecruitmentModule import RecruitmentModule
@@ -38,15 +37,15 @@ class ProcessNotification(spade.behaviour.CyclicBehaviour):
         msg = await self.receive(timeout=30)  
 
         if msg:
-            self.agent.logger.info(f"Received notification request from {msg.sender}")
+            self.agent.logger.info("Received notification request from %s", msg.sender)
             type, data = await self.agent.get_message_type_and_data(msg)
 
             if type == MessageType.NOTIF_CANDIDATE_CAN_REQUEST:
                 candidate = self.agent.candidateModule.get(data[0])
-                self.agent.logger.info(f"Sending to {candidate.email} message: {data[1]}")
+                self.agent.logger.info("Sending to %s message: %s", candidate.email, data[1])
             elif type == MessageType.NOTIF_CANDIDATE_RMENT_REQUEST:
                 recruitment = self.agent.recruitmentModule.get(data[0])
                 candidate = self.agent.candidateModule.get(recruitment.candidate_id)
-                self.agent.logger.info(f"Sending to {candidate.email} message: {data[1]}")
+                self.agent.logger.info("Sending to %s message: %s", candidate.email, data[1])
             else:
-                self.agent.logger.warning(f"Received an unknown or invalid message for offert {data[0]}.")
+                self.agent.logger.warning("Received an unknown or invalid message for offert %s.", data[0])
