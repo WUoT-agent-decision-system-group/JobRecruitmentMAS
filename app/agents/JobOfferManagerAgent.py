@@ -1,33 +1,32 @@
 import spade.behaviour
 import random
 
-from app.agents import ApplicationAnalyzerAgent
+from app.agents import ApplicationAnalyzerAgent, NotificationAgent
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
 from app.dataaccess.model.CandidateProfile import CandidateProfile
-from app.dataaccess.model.JobOffer import ApplicationDetails, ApplicationStatus
+from app.dataaccess.model.JobOffer import ApplicationDetails, ApplicationStatus, JobOfferStatus
 from app.dataaccess.model.MessageType import MessageType
 from app.modules.CandidateModule import CandidateModule
 from app.modules.JobOfferModule import JobOfferModule
+from app.modules.RecruitmentModule import RecruitmentModule
 
 from .base.BaseAgent import BaseAgent
 
 AWAIT_APPLICATION_PERIOD = 15
-
+AWAIT_APPLICATION_FINISHED_PERIOD = 30
 
 class JobOfferManagerAgent(BaseAgent):
     def __init__(self, job_offer_id: str):
         super().__init__(job_offer_id)
         self.jobOfferModule = JobOfferModule(self.agent_config.dbname, self.logger)
         self.candidateModule = CandidateModule(self.agent_config.dbname, self.logger)
+        self.recruitmentModule = RecruitmentModule(self.agent_config.dbname, self.logger)
         self.job_offer_id = job_offer_id
         self.jobOffer = None
-        self.analyzers_count = self.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].defined_instances
         self.applications_to_init: list[ApplicationDetails] = None
         self.recruitments: dict[str, RecruitmentManagerAgent] = {}
         self.candidates_to_process: list[ApplicationDetails] = None
         self.applications_to_analyze: list[ApplicationDetails] = None
-
-        self.analyzerJID = self.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].jid
 
         # behaviours
         self.processCandidateBehav: ProcessCandidate = None
@@ -35,6 +34,7 @@ class JobOfferManagerAgent(BaseAgent):
         self.initRmentsBehav: InitRecruitments = None
         self.awaitApplicationBehav: AwaitApplication = None
         self.getStatusResponse: GetStatusResponse = None
+        self.finishedRecruitmentRequest: GetStatusResponse = None
 
     async def setup(self):
         await super().setup()
@@ -45,7 +45,7 @@ class JobOfferManagerAgent(BaseAgent):
             await self.stop()
 
         self.applications_to_init = [
-            x for x in self.jobOffer.applications if x.status != ApplicationStatus.NEW
+            x for x in self.jobOffer.applications if (x.status != ApplicationStatus.NEW and x.status != ApplicationStatus.REJECTED )
         ]
 
         self.initRmentsBehav = InitRecruitments()
@@ -54,7 +54,8 @@ class JobOfferManagerAgent(BaseAgent):
         self.add_behaviour(self.awaitApplicationBehav)
         self.getStatusResponse = GetStatusResponse()
         self.add_behaviour(self.getStatusResponse)
-
+        self.finishedRecruitmentRequest = FinishedRecruitmentRequest(period=AWAIT_APPLICATION_FINISHED_PERIOD)
+        self.add_behaviour(self.finishedRecruitmentRequest)
 
 class InitRecruitments(spade.behaviour.OneShotBehaviour):
     """
@@ -96,32 +97,49 @@ class AwaitApplication(spade.behaviour.PeriodicBehaviour):
     agent: JobOfferManagerAgent
 
     async def run(self):
-        self.agent.logger.info("AwaitApplication behaviour run.")
-        new_applications = self.check_new_applications()
-        if len(new_applications) > 0:
-            await self.process_candidates(new_applications)
+        if self.agent.jobOffer.status != JobOfferStatus.CLOSED:
+            self.agent.logger.info("AwaitApplication behaviour run.")
+            applications_to_process = self.check_applications_to_process()
+            if len(applications_to_process) > 0:
+                await self.process_candidates(applications_to_process)
+                await self.trigger_analysis(applications_to_process)
+        self.agent.jobOffer = self.agent.jobOfferModule.get(self.agent.job_offer_id)
 
-        processed_applications = self.agent.jobOfferModule.get_processed_applications(
-            self.agent.job_offer_id
-        )
-        if len(processed_applications) > 0:
-            await self.trigger_analysis(processed_applications)
-
-    def check_new_applications(self) -> list[ApplicationDetails]:
+    def check_applications_to_process(self) -> list[ApplicationDetails]:
         new_applications = self.agent.jobOfferModule.get_new_applications(
             self.agent.job_offer_id
         )
 
-        # ProcessApplication activity
+        applications_to_process = []
+        applications_to_reject = []
+        old_applications = len(self.agent.jobOffer.applications)
+
+        for app in new_applications:
+            if old_applications + 1 <= self.agent.jobOffer.max_number_of_candidates:
+                applications_to_process.append(app)
+                old_applications = old_applications+1
+            else:
+                applications_to_reject.append(app)
+
         result = self.agent.jobOfferModule.change_application_status(
             self.agent.job_offer_id,
-            [x.candidate_id for x in new_applications],
+            [x.candidate_id for x in applications_to_process],
             ApplicationStatus.PROCESSED,
-        )
+            )   
 
-        return new_applications if result else []
+        _ = self.agent.jobOfferModule.change_application_status(
+            self.agent.job_offer_id,
+            [x.candidate_id for x in applications_to_reject],
+            ApplicationStatus.REJECTED,
+            )
+        
+        if len(applications_to_process)>0:
+            self.agent.jobOfferModule.change_job_offer_status(self.agent.job_offer_id, JobOfferStatus.INPROGRESS) 
+
+        return applications_to_process if result else []
     
     async def process_candidates(self, new_applications: list[ApplicationDetails]):
+
         self.agent.candidates_to_process = new_applications
         self.agent.processCandidateBehav = ProcessCandidate()
         self.agent.add_behaviour(self.agent.processCandidateBehav)
@@ -181,10 +199,11 @@ class TriggerAnalysis(spade.behaviour.OneShotBehaviour):
         self.agent.logger.info("TriggerAnalysis behaviour run.")
 
         to_analyze = self.agent.applications_to_analyze
-
+        analyzerJID = self.agent.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].jid
+        analyzers_count = self.agent.config.agents[ApplicationAnalyzerAgent.__name__.split('.')[-1]].defined_instances
         for app in to_analyze:
             msg = await self.agent.prepare_message(
-                f"{self.agent.analyzerJID}_{random.randint(1, self.agent.analyzers_count)}@{self.agent.config.server.name}",
+                f"{analyzerJID}_{random.randint(1, analyzers_count)}@{self.agent.config.server.name}",
                 "request",
                 "analyze",
                 MessageType.ANALYSIS_REQUEST,
@@ -210,7 +229,7 @@ class GetStatusResponse(spade.behaviour.CyclicBehaviour):
         msg = await self.receive(timeout=120)
         if msg is None:
             return
-        
+
         self.agent.logger.info("Received get status request from %s.", msg.sender)
         type, _  = await self.agent.get_message_type_and_data(msg) 
 
@@ -218,19 +237,95 @@ class GetStatusResponse(spade.behaviour.CyclicBehaviour):
             self.agent.logger.warning("Received an unknown or invalid message.")
             return
         
-        jobOffer = self.agent.jobOfferModule.get(self.agent.job_offer_id)
+        jobOffer = self.agent.jobOffer
         if jobOffer is None:
             self.agent.logger.error("Job offer not found.")
             await self.agent.stop()
 
+        finished_applications = [
+            x for x in jobOffer.applications if x.status == ApplicationStatus.FINISHED
+        ]
+        analysed_applications = [
+            x for x in jobOffer.applications if x.status == ApplicationStatus.ANALYZED
+        ]
+        rejected_applications = [
+            x for x in jobOffer.applications if x.status == ApplicationStatus.REJECTED
+        ]
+        
         msg = await self.agent.prepare_message(
             f"{msg.sender}", 
             "response", 
             "status", 
             MessageType.STATUS_RESPONSE,
-            [f"{jobOffer._id}",f"{jobOffer.name}", f"{jobOffer.status.value}", f"{jobOffer.description}", f"{len(jobOffer.applications)}"]
+            [f"{jobOffer._id}",f"{jobOffer.name}", f"{jobOffer.status.value}", f"{jobOffer.description}", 
+             f"{len(finished_applications)}",f"{len(analysed_applications)}", f"{len(rejected_applications)}",
+             f"{jobOffer.best_candidate_id}" ]
         )
 
         await self.send(msg)
 
         self.agent.logger.info("Sent message status result to %s.", msg.sender)
+
+
+class FinishedRecruitmentRequest(spade.behaviour.PeriodicBehaviour):
+    """
+    Sends analyze request to RecruiterManager
+    Protocols/Activities in GAIA (role JobOfferManager): FinishedRecruitmentRequest, UpdateCandidatesRanking, CandidatesResult, 
+    ChooseBestCandidates, InformRecruiter, QueueResultNotification, Close
+    """
+
+    agent: JobOfferManagerAgent
+
+    async def run(self):
+        finished_applications = self.agent.jobOfferModule.get_finished_applications(self.agent.job_offer_id)
+        
+        if(len(finished_applications)== self.agent.jobOffer.max_number_of_candidates and self.agent.jobOffer.status != JobOfferStatus.CLOSED):
+            self.agent.logger.info("Closing job offert")
+            self.agent.jobOfferModule.change_job_offer_status(self.agent.job_offer_id, JobOfferStatus.CLOSED)  
+            await self.chooseBestCandidate(finished_applications)
+            await self.sendNotifToAllCandidates()
+
+
+    async def chooseBestCandidate(self, finished_applications: list[ApplicationDetails]):
+        bestResult = 0
+        bestCandidate = None
+        for app in finished_applications:
+            recruitments = self.agent.recruitmentModule.get_by_job_and_candidate(self.agent.job_offer_id, app.candidate_id)    
+            if len(recruitments) == 0:
+                self.agent.logger.info(
+                "No recruitments found. Recruitment with job_offer_id: %s and candidate_id: %s to be created.", self.agent.job_offer_id, self.agent.candidate_id
+                )
+            candidateResult = recruitments[0].application_rating + recruitments[0].overall_result
+            if candidateResult > bestResult:
+                bestCandidate = app.candidate_id
+                bestResult = candidateResult
+        self.agent.jobOfferModule.update(self.agent.job_offer_id, {"best_candidate_id": bestCandidate} ) 
+
+
+    async def sendNotifToAllCandidates(self):
+        jobOffer = self.agent.jobOfferModule.get(self.agent.job_offer_id)
+
+        prefix = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].jid
+        instances = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].defined_instances
+        
+        message = ""
+        for app in jobOffer.applications:
+            if(app.status == ApplicationStatus.FINISHED):
+                if(app.candidate_id == jobOffer.best_candidate_id):
+                    message = "Congratulations!!! You were the best candidate in the recruitment process."
+                else:
+                    message = "Sorry. Unfortunately, there were better candidates for this position."
+            
+            
+            else:
+                message = "Unfortunately, too many applications, it was decided not to consider your candidacy."
+        
+            msg = await self.agent.prepare_message(
+            f"{prefix}_{random.randint(1, instances)}@{self.agent.config.server.name}",
+            "request",
+            "notif", 
+            MessageType.NOTIF_CANDIDATE_CAN_REQUEST if app.status == ApplicationStatus.FINISHED else MessageType.NOTIF_CANDIDATE_REJECTED_REQUEST,
+            [f"{app.candidate_id if app.status == ApplicationStatus.FINISHED else app.email}", message])
+
+            await self.send(msg)
+            self.agent.logger.info("Sent message to notification agent with the notif request for %s.", app.candidate_id)

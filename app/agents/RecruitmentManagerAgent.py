@@ -4,12 +4,14 @@ from typing import List, Optional
 import spade.behaviour
 
 from app.agents import NotificationAgent
+from app.dataaccess.model.JobOffer import ApplicationStatus
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
 from app.dataaccess.model.RecruitmentStage import (
     RecruitmentStageStatus,
 )
+from app.modules.JobOfferModule import JobOfferModule
 from app.modules.RecruitmentInstructionModule import RecruitmentInstructionModule
 from app.modules.RecruitmentModule import RecruitmentModule
 from app.modules.RecruitmentStageModule import RecruitmentStageModule
@@ -24,6 +26,7 @@ class RecruitmentManagerAgent(BaseAgent):
 
         self.job_offer_id = job_offer_id
         self.candidate_id = candidate_id
+        self.jobOffer_module = JobOfferModule(self.agent_config.dbname, self.logger)
         self.recruitment_module = RecruitmentModule(
             self.agent_config.dbname, self.logger
         )
@@ -236,6 +239,8 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
                 f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
                 self.kill() 
                 return
+            
+            _ = self.agent.jobOffer_module.change_application_status(self.agent.job_offer_id,[self.agent.candidate_id], ApplicationStatus.FINISHED)
             
             if recruitments[0].notif_sent == True:
                 self.kill()

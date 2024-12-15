@@ -12,7 +12,9 @@ db.jobOffers.insertOne({
     "description": "testowe description 1",
     "status": 0,
     "applications": [],
-    "recruiter_id" : ObjectId("674aff48c8c935e125c12345")
+    "recruiter_id" : ObjectId("674aff48c8c935e125c12345"),
+    "best_candidate_id": "null", 
+    "max_number_of_candidates": 2  
 });
 
 db.recruitmentInstructions.insertOne({
@@ -28,7 +30,9 @@ db.jobOffers.insertOne({
     "description": "testowe description 2",
     "status": 0,
     "applications": [],
-    "recruiter_id" : ObjectId("674aff48c8c935e125c12345")
+    "recruiter_id" : ObjectId("674aff48c8c935e125c12345"),
+    "best_candidate_id": "null", 
+    "max_number_of_candidates": 2  
 });
 
 db.recruitmentInstructions.insertOne({

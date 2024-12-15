@@ -37,8 +37,7 @@ async def main():
     logger = LogConfig.get_logger("init")
     config = MASConfiguration.load()
     dbname = config.agents[JobOfferManagerAgent.__name__].dbname
-    jobOffers = JobOfferModule(dbname, logger).get_open_job_offers()
-
+    jobOffers = JobOfferModule(dbname, logger).find_all()
     agents = await create_agents(jobOffers,config)
     await spade.wait_until_finished(agents)
 

@@ -85,11 +85,11 @@ class PresentAnalysis(spade.behaviour.OneShotBehaviour):
                 type, data = await self.agent.get_message_type_and_data(msg)
                                 
                 if type == MessageType.STATUS_RESPONSE:
-                    self.responses[data[0]] = [data[1], data[2], data[3], data[4]]
+                    self.responses[data[0]] = [data[1], data[2], data[3], data[4], data[5], data[6],  data[7]]
                 else:
                     self.agent.logger.warning("Received an unknown or invalid message for offert %s.", data[0])
             else:
-                self.agent.logger.warning("Timeout reached for offert %s, no response received.",data[0])
+                self.agent.logger.warning("Timeout reached.")
 
         if set(self.responses.keys()) == self.expected_offerts:
             self.agent.logger.info("All responses received. Proceeding with analysis.")
@@ -108,11 +108,17 @@ class PresentAnalysis(spade.behaviour.OneShotBehaviour):
             name = data[0] 
             status = data[1]
             description = data[2]
-            applications = data[3]
+            finished_applications = data[3]
+            analysed_applications = data[4]
+            rejected_applications = data[5]
+            best_candidate_id = data[6]
 
             offer_analysis = f"Job Offer: {name} (ID: {offert_id})\n" \
                          f"Description: {description}\n" \
                          f"Status: { JobOffer.JobOfferStatus(int(status))}\n" \
-                         f"Total Applications: {int(applications)}"
+                         f"Finished Applications: {int(finished_applications)}\n" \
+                         f"Applications in progress: {int(analysed_applications)}\n" \
+                         f"Rejected Applications: {int(rejected_applications)}\n" \
+                         f"Bestcandidate: (ID: {best_candidate_id})"
             
             self.agent.logger.info("Detailed Analysis Report:\n%s", offer_analysis)

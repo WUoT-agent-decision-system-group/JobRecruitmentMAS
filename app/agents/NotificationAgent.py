@@ -47,5 +47,8 @@ class ProcessNotification(spade.behaviour.CyclicBehaviour):
                 recruitment = self.agent.recruitmentModule.get(data[0])
                 candidate = self.agent.candidateModule.get(recruitment.candidate_id)
                 self.agent.logger.info("Sending to %s message: %s", candidate.email, data[1])
+            elif type == MessageType.NOTIF_CANDIDATE_REJECTED_REQUEST:
+                self.agent.logger.info("Sending to %s message: %s", data[0], data[1])
+
             else:
                 self.agent.logger.warning("Received an unknown or invalid message for offert %s.", data[0])
