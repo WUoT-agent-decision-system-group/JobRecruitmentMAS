@@ -61,7 +61,7 @@ class BaseAgent(ABC, Agent):
         type: MessageType,
         data: List[str],
     ) -> Message:
-        self.logger.info(f"Preparing message to agent with jid: {str(to_jid)}")
+        self.logger.info("Preparing message to agent with jid: %s", str(to_jid))
         msg = Message(to=str(to_jid))
 
         msg.set_metadata("performative", performative)

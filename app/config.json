@@ -31,7 +31,19 @@
     "ApplicationAnalyzerAgent": {
       "jid": "analyzer",
       "password": "analyzer_password",
+      "dbname": "aasd",
+      "defined_instances" : 2
+    },
+    "RecruiterAgent": {
+      "jid": "rer",
+      "password": "rer_password",
       "dbname": "aasd"
+    },
+    "NotificationAgent": {
+      "jid": "notif",
+      "password": "notif_password",
+      "dbname": "aasd",
+      "defined_instances" : 2
     }
   },
   "db": {

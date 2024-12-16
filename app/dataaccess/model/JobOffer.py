@@ -10,6 +10,8 @@ class ApplicationStatus(Enum):
     PROCESSED = 1
     IN_ANALYSIS = 2
     ANALYZED = 3
+    FINISHED = 4
+    REJECTED = 5
 
 
 class ApplicationDetails(PrintableObject):
@@ -34,8 +36,7 @@ class JobOfferStatus(Enum):
     NEW = 0
     PROCESSED = 1
     INPROGRESS = 2
-    TOCLOSE = 3
-    CLOSED = 4
+    CLOSED = 3
 
 
 class JobOffer(BaseObject):
@@ -46,9 +47,15 @@ class JobOffer(BaseObject):
         description: str,
         status: JobOfferStatus,
         applications: dict,
+        recruiter_id: str | ObjectId,
+        best_candidate_id: str | ObjectId,
+        max_number_of_candidates: int,
     ):
         super().__init__(_id)
         self.name = name
         self.description = description
         self.status = JobOfferStatus(status)
         self.applications = [ApplicationDetails(**appl) for appl in applications]
+        self.recruiter_id = recruiter_id
+        self.best_candidate_id = best_candidate_id
+        self.max_number_of_candidates = max_number_of_candidates

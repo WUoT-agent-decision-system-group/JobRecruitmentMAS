@@ -15,6 +15,7 @@ class AgentConfig:
     jid: str
     password: str
     dbname: str
+    defined_instances: int = None
 
 
 @dataclass

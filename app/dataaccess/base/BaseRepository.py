@@ -2,7 +2,6 @@ from abc import ABC
 from logging import Logger
 from typing import Generic, Type, TypeVar
 
-from bson.objectid import ObjectId
 from pymongo.collection import Any, Collection, Mapping, Sequence
 
 from app.dataaccess.model.BaseObject import BaseObject

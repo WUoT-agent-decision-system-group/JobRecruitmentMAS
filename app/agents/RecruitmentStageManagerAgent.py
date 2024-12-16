@@ -1,5 +1,7 @@
+import random
+
 import spade.behaviour
-from spade.message import Message
+from agents.NotificationAgent import NotificationAgent
 
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.RecruitmentStage import (
@@ -70,7 +72,9 @@ class CheckRecruitmentStages(spade.behaviour.OneShotBehaviour):
         if len(recruitment_stages) == 0:
             self.agent.if_created = False
             self.agent.logger.info(
-                f"No recruitment stages found. Recruitment stage with recruitment: {self.agent.recruitment_id} and identifier: {self.agent.identifier} to be created."
+                "No recruitment stages found. Recruitment stage with recruitment: %s and identifier: %s to be created.",
+                self.agent.recruitment_id,
+                self.agent.identifier,
             )
         else:
             self.agent.if_created = True
@@ -78,7 +82,8 @@ class CheckRecruitmentStages(spade.behaviour.OneShotBehaviour):
 
             await self.check_stage_status()
             self.agent.logger.info(
-                f"Found recruitment stage with id: {recruitment_stages[0]._id}. No recruitment stage objects will be created."
+                "Found recruitment stage with id: %s. No recruitment stage objects will be created.",
+                recruitment_stages[0]._id,
             )
 
     async def check_stage_status(self):
@@ -149,11 +154,13 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
             self.agent.add_behaviour(self.agent.track_stage_behav)
 
             self.kill()
+            return
 
     async def evaluate_stage_start(self, body: str) -> bool:
         start_allowed = True if body == "True" else False
         self.agent.logger.info(
-            f"Received message from rm agent with permission to start: {start_allowed}."
+            "Received message from rm agent with permission to start: %s.",
+            start_allowed,
         )
 
         if (
@@ -164,6 +171,29 @@ class ManageState(spade.behaviour.PeriodicBehaviour):
             self.agent.recruitment_stage_module.update(
                 self.agent.recruitment_stage._id,
                 {"status": RecruitmentStageStatus.IN_PROGRESS.value},
+            )
+            prefix = self.agent.config.agents[
+                NotificationAgent.__name__.split(".")[-1]
+            ].jid
+            instances = self.agent.config.agents[
+                NotificationAgent.__name__.split(".")[-1]
+            ].defined_instances
+
+            msg = await self.agent.prepare_message(
+                f"{prefix}_{random.randint(1, instances)}@{self.agent.config.server.name}",
+                "request",
+                "notif",
+                MessageType.NOTIF_CANDIDATE_RMENT_REQUEST,
+                [
+                    f"{self.agent.recruitment_id}",
+                    f"The stage of the type {self.agent.recruitment_stage.type} can be started!",
+                ],
+            )
+
+            await self.send(msg)
+
+            self.agent.logger.info(
+                "Sent message to notification agent with the notif request."
             )
 
         return start_allowed

@@ -28,3 +28,6 @@ class CandidateModule:
             return self.__candidate_repository.update_applied_jobs(
                 candidate_to_add.id, candidate_to_add.applied_jobs
             )
+
+    def get(self, _id: str) -> CandidateProfile:
+        return self.__candidate_repository.get(_id)
