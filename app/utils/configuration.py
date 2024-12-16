@@ -17,6 +17,7 @@ class AgentConfig:
     dbname: str
     defined_instances: int = None
 
+
 @dataclass
 class DBConfig:
     host: str

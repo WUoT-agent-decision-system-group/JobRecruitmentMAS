@@ -49,7 +49,7 @@ class JobOffer(BaseObject):
         applications: dict,
         recruiter_id: str | ObjectId,
         best_candidate_id: str | ObjectId,
-        max_number_of_candidates: int
+        max_number_of_candidates: int,
     ):
         super().__init__(_id)
         self.name = name
@@ -57,5 +57,5 @@ class JobOffer(BaseObject):
         self.status = JobOfferStatus(status)
         self.applications = [ApplicationDetails(**appl) for appl in applications]
         self.recruiter_id = recruiter_id
-        self.best_candidate_id = best_candidate_id 
+        self.best_candidate_id = best_candidate_id
         self.max_number_of_candidates = max_number_of_candidates

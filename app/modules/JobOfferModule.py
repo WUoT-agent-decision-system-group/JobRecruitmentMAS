@@ -39,14 +39,18 @@ class JobOfferModule:
             self.logger.error("Update error for applications %s", candidate_ids)
 
         return result
-    
+
     def change_job_offer_status(
         self, job_offer_id: str, status: JobOfferStatus
     ) -> bool:
 
-        self.logger.info("Changing status for job offer %s. New status: %s", job_offer_id, status)
+        self.logger.info(
+            "Changing status for job offer %s. New status: %s", job_offer_id, status
+        )
 
-        result = self.__job_offers_repository.change_job_offer_status(job_offer_id, status)
+        result = self.__job_offers_repository.change_job_offer_status(
+            job_offer_id, status
+        )
 
         if not result:
             self.logger.error("Update error for job offer %s", job_offer_id)
@@ -61,7 +65,7 @@ class JobOfferModule:
         ]
         self.logger.info("Found %d new applications.", len(new_appl))
         return new_appl
-    
+
     def get_finished_applications(self, job_offer_id: str):
         self.logger.info("Checking finished applications...")
         jobOffer: JobOffer = self.__job_offers_repository.get(job_offer_id)
@@ -70,7 +74,7 @@ class JobOfferModule:
         ]
         self.logger.info("Found %d finished applications.", len(finished_appl))
         return finished_appl
-    
+
     def get_processed_applications(self, job_offer_id: str):
         self.logger.info("Checking processed applications...")
         jobOffer: JobOffer = self.__job_offers_repository.get(job_offer_id)

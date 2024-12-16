@@ -8,9 +8,7 @@ from app.dataaccess.model.JobOffer import ApplicationStatus
 from app.dataaccess.model.MessageType import MessageType
 from app.dataaccess.model.Recruitment import Recruitment
 from app.dataaccess.model.RecruitmentInstruction import RecruitmentInstruction
-from app.dataaccess.model.RecruitmentStage import (
-    RecruitmentStageStatus,
-)
+from app.dataaccess.model.RecruitmentStage import RecruitmentStageStatus
 from app.modules.JobOfferModule import JobOfferModule
 from app.modules.RecruitmentInstructionModule import RecruitmentInstructionModule
 from app.modules.RecruitmentModule import RecruitmentModule
@@ -76,13 +74,18 @@ class CheckRecruitments(spade.behaviour.OneShotBehaviour):
         if len(recruitments) == 0:
             self.agent.if_created = False
             self.agent.logger.info(
-                "No recruitments found. Recruitment with job_offer_id: %s and candidate_id: %s to be created.", self.agent.job_offer_id, self.agent.candidate_id
+                "No recruitments found. Recruitment with job_offer_id: %s and candidate_id: %s to be created.",
+                self.agent.job_offer_id,
+                self.agent.candidate_id,
             )
         else:
             self.agent.if_created = True
             self.agent.recruitment = recruitments[0]
 
-            self.agent.logger.info("Found recruitment with id: %s. No recruitment objects will be created.", recruitments[0]._id)
+            self.agent.logger.info(
+                "Found recruitment with id: %s. No recruitment objects will be created.",
+                recruitments[0]._id,
+            )
 
 
 class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
@@ -136,7 +139,11 @@ class PrepareRecruitment(spade.behaviour.OneShotBehaviour):
 
             await rment_stage_agent.start()
 
-            self.agent.logger.info("%d) Started RSM agent for recruitment with id: %s.", i, self.agent.recruitment._id)
+            self.agent.logger.info(
+                "%d) Started RSM agent for recruitment with id: %s.",
+                i,
+                self.agent.recruitment._id,
+            )
 
 
 class AgentCommunication(spade.behaviour.CyclicBehaviour):
@@ -170,7 +177,9 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         await handler(data)
 
     async def handle_start_request(self, data: List[str]):
-        self.agent.logger.info("Received message with start request from rsm agent with jid: %s", data[0])
+        self.agent.logger.info(
+            "Received message with start request from rsm agent with jid: %s", data[0]
+        )
 
         start_permission = await self.validate_priority(int(data[1]))
         msg = await self.agent.prepare_message(
@@ -181,11 +190,15 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             [f"{start_permission}"],
         )
 
-        self.agent.logger.info("Sending message to rsm agent with the start permission.")
+        self.agent.logger.info(
+            "Sending message to rsm agent with the start permission."
+        )
         await self.send(msg)
 
     async def handle_stage_result(self, data: List[str]):
-        self.agent.logger.info("Received message with stage result from rsm agent with jid: %s", data[0])
+        self.agent.logger.info(
+            "Received message with stage result from rsm agent with jid: %s", data[0]
+        )
 
         await self.update_overall_result(float(data[1]))
         await self.should_update_priority()
@@ -197,7 +210,9 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
             MessageType.STAGE_RESULT_ACK,
             ["ACK"],
         )
-        self.agent.logger.info("Sending message to rsm agent to acknowledge the receipt of stage result.")
+        self.agent.logger.info(
+            "Sending message to rsm agent to acknowledge the receipt of stage result."
+        )
         await self.send(msg)
 
     async def update_overall_result(self, stage_result: float):
@@ -218,7 +233,10 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         )
 
         if should_change:
-            self.agent.logger.info("Updating current priority to: %d.", self.agent.recruitment.current_priority + 1)
+            self.agent.logger.info(
+                "Updating current priority to: %d.",
+                self.agent.recruitment.current_priority + 1,
+            )
 
             self.agent.recruitment.current_priority += 1
             self.agent.recruitment_module.increment(
@@ -232,28 +250,43 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
         )
 
         if should_end:
-            self.agent.logger.info("All recruitment stages are DONE. Ending AgentCommunication behaviour...")
+            self.agent.logger.info(
+                "All recruitment stages are DONE. Ending AgentCommunication behaviour..."
+            )
 
-            recruitments = self.agent.recruitment_module.get_by_job_and_candidate(self.agent.job_offer_id, self.agent.candidate_id)   
+            recruitments = self.agent.recruitment_module.get_by_job_and_candidate(
+                self.agent.job_offer_id, self.agent.candidate_id
+            )
             if len(recruitments) == 0:
                 f"No recruitments with job_offer_id: {self.agent.job_offer_id} and candidate_id: {self.agent.candidate_id} found."
-                self.kill() 
+                self.kill()
                 return
-            
-            _ = self.agent.jobOffer_module.change_application_status(self.agent.job_offer_id,[self.agent.candidate_id], ApplicationStatus.FINISHED)
-            
+
+            _ = self.agent.jobOffer_module.change_application_status(
+                self.agent.job_offer_id,
+                [self.agent.candidate_id],
+                ApplicationStatus.FINISHED,
+            )
+
             if recruitments[0].notif_sent == True:
                 self.kill()
                 return
 
-            prefix = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].jid
-            instances = self.agent.config.agents[NotificationAgent.__name__.split('.')[-1]].defined_instances
+            prefix = self.agent.config.agents[
+                NotificationAgent.__name__.split(".")[-1]
+            ].jid
+            instances = self.agent.config.agents[
+                NotificationAgent.__name__.split(".")[-1]
+            ].defined_instances
             msg = await self.agent.prepare_message(
                 f"{prefix}_{random.randint(1, instances)}@{self.agent.config.server.name}",
                 "request",
                 "notif",
                 MessageType.NOTIF_CANDIDATE_CAN_REQUEST,
-                [f"{recruitments[0].candidate_id}", "Congratulations on completing all stages of recruitment. we will get back to you soon"]
+                [
+                    f"{recruitments[0].candidate_id}",
+                    "Congratulations on completing all stages of recruitment. we will get back to you soon",
+                ],
             )
 
             await self.send(msg)
@@ -261,29 +294,44 @@ class AgentCommunication(spade.behaviour.CyclicBehaviour):
                 recruitments[0]._id,
                 {"notif_sent": True},
             )
-            self.agent.logger.info("Sent message to notification agent with the notif request.")
+            self.agent.logger.info(
+                "Sent message to notification agent with the notif request."
+            )
             self.kill()
             return
 
     async def handle_analysis_result(self, data: List[str]):
-        self.agent.logger.info("Received message with CV analysis result equal to %s", data[0])
+        self.agent.logger.info(
+            "Received message with CV analysis result equal to %s", data[0]
+        )
 
         recruitments = self.agent.recruitment_module.get_by_job_and_candidate(
-            self.agent.job_offer_id, 
+            self.agent.job_offer_id,
             self.agent.candidate_id,
         )
         if len(recruitments) == 0:
-            self.agent.logger.info("No recruitments with job_offer_id: %s and candidate_id: %s found.",self.agent.job_offer_id, self.agent.candidate_id )
+            self.agent.logger.info(
+                "No recruitments with job_offer_id: %s and candidate_id: %s found.",
+                self.agent.job_offer_id,
+                self.agent.candidate_id,
+            )
             return
-        
+
         result = self.agent.recruitment_module.update(
-            recruitments[0]._id, 
-            {"application_rating": int(data[0])}
+            recruitments[0]._id, {"application_rating": int(data[0])}
         )
         if result:
-            self.agent.logger.info("Successfully saved the candidate %s rating for job offer %s", self.agent.candidate_id, self.agent.job_offer_id)
+            self.agent.logger.info(
+                "Successfully saved the candidate %s rating for job offer %s",
+                self.agent.candidate_id,
+                self.agent.job_offer_id,
+            )
         else:
-            self.agent.logger.info("Failed to save the candidate %s rating for job offer %s", self.agent.candidate_id, self.agent.job_offer_id)
+            self.agent.logger.info(
+                "Failed to save the candidate %s rating for job offer %s",
+                self.agent.candidate_id,
+                self.agent.job_offer_id,
+            )
 
     async def handle_unknown_message(self):
         self.agent.logger.warning("Unknown message type received, ignoring...")

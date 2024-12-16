@@ -1,5 +1,6 @@
 import asyncio
 import random
+
 import spade.behaviour
 
 from app.agents.RecruitmentManagerAgent import RecruitmentManagerAgent
@@ -11,10 +12,12 @@ from .base.BaseAgent import BaseAgent
 
 
 class ApplicationAnalyzerAgent(BaseAgent):
-    def __init__(self, index :int):
+    def __init__(self, index: int):
         super().__init__(f"{index}")
 
-        self.rmentJID = self.config.agents[RecruitmentManagerAgent.__name__.split('.')[-1]].jid
+        self.rmentJID = self.config.agents[
+            RecruitmentManagerAgent.__name__.split(".")[-1]
+        ].jid
 
         self.jobOfferModule = JobOfferModule(self.agent_config.dbname, self.logger)
 
@@ -43,7 +46,7 @@ class Analyze(spade.behaviour.CyclicBehaviour):
         msg = await self.receive(timeout=120)
         if msg is None:
             return
-        
+
         self.agent.logger.info("Received analyze request: %s", msg.body)
 
         _, data = await self.agent.get_message_type_and_data(msg)
@@ -56,10 +59,10 @@ class Analyze(spade.behaviour.CyclicBehaviour):
 
         if result is None:
             return
-        
+
         # RateCandidate activity
         await asyncio.sleep(10)
-        
+
         analysis_result = random.randint(0, 100)
 
         result = self.agent.jobOfferModule.change_application_status(
@@ -70,14 +73,14 @@ class Analyze(spade.behaviour.CyclicBehaviour):
 
         if result is None:
             return
-        
+
         # AnalyzeResponse protocol
         msg = await self.agent.prepare_message(
-            f"{self.agent.rmentJID}_{data[0]}_{data[1]}@{self.agent.config.server.name}", 
-            "response", 
-            "analyze", 
+            f"{self.agent.rmentJID}_{data[0]}_{data[1]}@{self.agent.config.server.name}",
+            "response",
+            "analyze",
             MessageType.ANALYSIS_RESULT,
-            [f"{analysis_result}"]
+            [f"{analysis_result}"],
         )
 
         await self.send(msg)

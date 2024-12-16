@@ -1,27 +1,34 @@
-import spade
+from collections import defaultdict
 
-from agents.JobOfferManagerAgent import JobOfferManagerAgent
+import spade
 from agents.ApplicationAnalyzerAgent import ApplicationAnalyzerAgent
-from agents.RecruiterAgent import RecruiterAgent
+from agents.JobOfferManagerAgent import JobOfferManagerAgent
 from agents.NotificationAgent import NotificationAgent
+from agents.RecruiterAgent import RecruiterAgent
 from dataaccess.model.JobOffer import JobOffer
 from modules.JobOfferModule import JobOfferModule
 from utils.log_config import LogConfig
-from collections import defaultdict
 
 from app.utils.configuration import MASConfiguration
 
-async def create_agents(jobOffers: list[JobOffer], config: MASConfiguration) -> list[spade.agent.Agent]:
+
+async def create_agents(
+    jobOffers: list[JobOffer], config: MASConfiguration
+) -> list[spade.agent.Agent]:
     recruiter_offers_map = defaultdict(list)
     for jobOffer in jobOffers:
         recruiter_offers_map[jobOffer.recruiter_id].append(jobOffer.id)
 
     agents = [JobOfferManagerAgent(x.id) for x in jobOffers]
 
-    for index in range(1, config.agents[ApplicationAnalyzerAgent.__name__].defined_instances+1):
+    for index in range(
+        1, config.agents[ApplicationAnalyzerAgent.__name__].defined_instances + 1
+    ):
         agents.append(ApplicationAnalyzerAgent(index))
 
-    for index in range(1, config.agents[NotificationAgent.__name__].defined_instances+1):
+    for index in range(
+        1, config.agents[NotificationAgent.__name__].defined_instances + 1
+    ):
         agents.append(NotificationAgent(index))
 
     for recruiter_id, offers_id in recruiter_offers_map.items():
@@ -38,8 +45,9 @@ async def main():
     config = MASConfiguration.load()
     dbname = config.agents[JobOfferManagerAgent.__name__].dbname
     jobOffers = JobOfferModule(dbname, logger).find_all()
-    agents = await create_agents(jobOffers,config)
+    agents = await create_agents(jobOffers, config)
     await spade.wait_until_finished(agents)
+
 
 if __name__ == "__main__":
     spade.run(main())

@@ -22,8 +22,5 @@ class JobOfferRepository(BaseRepository):
 
     def change_job_offer_status(
         self, job_offer_id: str, status: JobOfferStatus
-    ) -> bool: 
-        return self.update(
-        job_offer_id,  
-        {"$set": {"status": status.value}}  
-        )   
+    ) -> bool:
+        return self.update(job_offer_id, {"$set": {"status": status.value}})
